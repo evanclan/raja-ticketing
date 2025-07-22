@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import QrScanner from "qr-scanner";
+import { supabase } from "../../lib/supabase";
 
 export default function QRScanner({ eventId, isOpen, onClose }) {
   const [scanning, setScanning] = useState(false);
@@ -27,15 +28,23 @@ export default function QRScanner({ eventId, isOpen, onClose }) {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch(
-        `${
-          import.meta.env.VITE_API_BASE_URL || "http://localhost:3001"
-        }/api/event/${eventId}/check-in-stats`
-      );
-      if (response.ok) {
-        const data = await response.json();
-        setStats(data);
-      }
+      // Get check-in stats directly from Supabase
+      const { data, error } = await supabase
+        .from("registrations")
+        .select("status, checked_in")
+        .eq("event_id", eventId);
+
+      if (error) throw error;
+
+      const total = data.length;
+      const checkedIn = data.filter((r) => r.checked_in).length;
+      const pending = total - checkedIn;
+
+      setStats({
+        total,
+        checkedIn,
+        pending,
+      });
     } catch (err) {
       console.error("Failed to fetch stats:", err);
     }

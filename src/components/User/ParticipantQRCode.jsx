@@ -15,18 +15,26 @@ export default function ParticipantQRCode({ event, user, isOpen, onClose }) {
     setLoading(true);
     setError("");
     try {
-      const response = await fetch(
-        `${
-          import.meta.env.VITE_API_BASE_URL || "http://localhost:3001"
-        }/api/event/${event.id}/participant/${user.id}/qr`
-      );
+      // Generate QR code directly in frontend
+      const qrData = JSON.stringify({
+        eventId: event.id,
+        userId: user.id,
+        timestamp: Date.now(),
+        eventTitle: event.title,
+        userName: user.full_name || user.email,
+      });
 
-      if (!response.ok) {
-        throw new Error("Failed to generate QR code");
-      }
+      const QRCode = (await import("qrcode")).default;
+      const qrCodeDataURL = await QRCode.toDataURL(qrData, {
+        width: 256,
+        margin: 2,
+        color: {
+          dark: "#000000",
+          light: "#FFFFFF",
+        },
+      });
 
-      const data = await response.json();
-      setQrCode(data);
+      setQrCode({ qrCode: qrCodeDataURL });
     } catch (err) {
       setError(err.message);
     } finally {

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { supabase } from "../../lib/supabase";
 
 export default function ParticipantsModal({ event, isOpen, onClose }) {
   const [participants, setParticipants] = useState([]);
@@ -17,26 +18,25 @@ export default function ParticipantsModal({ event, isOpen, onClose }) {
     setParticipants([]);
 
     try {
-      // Use server-side endpoint to get participants
-      const response = await fetch(
-        `${
-          import.meta.env.VITE_API_BASE_URL || "http://localhost:3001"
-        }/api/event/${event.id}/participants`
-      );
+      // Use Supabase client directly to get participants
+      const { data, error } = await supabase
+        .from("registrations")
+        .select(
+          `
+          user_id,
+          created_at,
+          status,
+          users!inner(email, full_name)
+        `
+        )
+        .eq("event_id", event.id)
+        .eq("status", "approved");
 
-      if (!response.ok) {
-        throw new Error(
-          `Server error: ${response.status} ${response.statusText}`
-        );
+      if (error) {
+        throw new Error(error.message);
       }
 
-      const result = await response.json();
-
-      if (result.error) {
-        throw new Error(result.error);
-      }
-
-      setParticipants(result.participants || []);
+      setParticipants(data || []);
     } catch (err) {
       setError(err.message);
     } finally {

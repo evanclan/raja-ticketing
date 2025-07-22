@@ -54,34 +54,35 @@ export default function SuperuserDashboard({ onSignOut }) {
     try {
       console.log("🔥 Using NEW admin creation system...");
 
-      const response = await fetch(
-        `${
-          import.meta.env.VITE_API_BASE_URL || "http://localhost:3001"
-        }/api/create-proper-admin`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${supabase.supabaseKey}`,
-          },
-          body: JSON.stringify({
-            email: addEmail,
-            password: addPassword,
-          }),
-        }
-      );
+      // Create admin directly using Supabase Auth
+      const { data: user, error: createError } =
+        await supabase.auth.admin.createUser({
+          email: addEmail,
+          password: addPassword,
+          email_confirm: true,
+          user_metadata: { role: "admin" },
+        });
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        setAddError(result.error || "Failed to create admin");
+      if (createError) {
+        setAddError("Failed to create admin: " + createError.message);
       } else {
-        setAddSuccess(
-          `✅ NEW SYSTEM: Admin created! Auth: ${result.authRole}, DB: ${result.publicRole}`
-        );
-        setAddEmail("");
-        setAddPassword("");
-        fetchAdmins(); // Refresh admin list
+        // Insert into public.users table with admin role
+        const { error: insertError } = await supabase.from("users").insert({
+          id: user.user.id,
+          email: addEmail,
+          role: "admin",
+        });
+
+        if (insertError) {
+          setAddError(
+            "User created but role assignment failed: " + insertError.message
+          );
+        } else {
+          setAddSuccess(`✅ Admin created successfully: ${addEmail}`);
+          setAddEmail("");
+          setAddPassword("");
+          fetchAdmins(); // Refresh admin list
+        }
       }
     } catch (error) {
       setAddError("Error creating admin: " + error.message);
@@ -103,26 +104,21 @@ export default function SuperuserDashboard({ onSignOut }) {
     setAddSuccess("");
 
     try {
-      const response = await fetch(
-        `${
-          import.meta.env.VITE_API_BASE_URL || "http://localhost:3001"
-        }/api/delete-user`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${supabase.supabaseKey}`,
-          },
-          body: JSON.stringify({
-            userEmail: adminEmail,
-          }),
-        }
+      // Find user by email and delete
+      const { data: users, error: findError } =
+        await supabase.auth.admin.listUsers();
+      if (findError) throw findError;
+
+      const userToDelete = users.users.find((u) => u.email === adminEmail);
+      if (!userToDelete) throw new Error("User not found");
+
+      // Delete from auth and public tables
+      const { error: deleteError } = await supabase.auth.admin.deleteUser(
+        userToDelete.id
       );
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        setAddError(result.error || "Failed to delete admin");
+      if (deleteError) {
+        setAddError("Failed to delete admin: " + deleteError.message);
       } else {
         setAddSuccess(`Admin ${adminEmail} deleted successfully!`);
         fetchAdmins(); // Refresh the admin list
@@ -147,26 +143,21 @@ export default function SuperuserDashboard({ onSignOut }) {
     setAddSuccess("");
 
     try {
-      const response = await fetch(
-        `${
-          import.meta.env.VITE_API_BASE_URL || "http://localhost:3001"
-        }/api/delete-user`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${supabase.supabaseKey}`,
-          },
-          body: JSON.stringify({
-            userEmail: userEmail,
-          }),
-        }
+      // Find user by email and delete
+      const { data: users, error: findError } =
+        await supabase.auth.admin.listUsers();
+      if (findError) throw findError;
+
+      const userToDelete = users.users.find((u) => u.email === userEmail);
+      if (!userToDelete) throw new Error("User not found");
+
+      // Delete from auth system
+      const { error: deleteError } = await supabase.auth.admin.deleteUser(
+        userToDelete.id
       );
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        setAddError(result.error || "Failed to delete user");
+      if (deleteError) {
+        setAddError("Failed to delete user: " + deleteError.message);
       } else {
         setAddSuccess(`User ${userEmail} deleted successfully!`);
         fetchUsers(); // Refresh the user list
