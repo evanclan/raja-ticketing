@@ -8,7 +8,7 @@ const supabaseAnonKey =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ3YWRmcmJuYWxya3BpeWdqeGhoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI4NjU4OTcsImV4cCI6MjA2ODQ0MTg5N30.jUFLaVL_WGCtJCR4T2qxkzP5-8HpHKQnZqHLtgNUMCM";
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.error(
+  console.warn(
     "Missing Supabase environment variables. Using fallback values."
   );
 }
