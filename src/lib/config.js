@@ -5,8 +5,7 @@ const isProduction = import.meta.env.PROD;
 // API Base URL configuration
 export const API_BASE_URL = isDevelopment
   ? import.meta.env.VITE_API_BASE_URL || "http://localhost:3001"
-  : import.meta.env.VITE_API_BASE_URL_PROD ||
-    "https://your-vercel-app.vercel.app";
+  : "https://ra-ja-ticketing-system.vercel.app";
 
 // API Endpoints
 export const API_ENDPOINTS = {
