@@ -1,11 +1,15 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl =
+  import.meta.env.VITE_SUPABASE_URL ||
+  "https://vwadfrbnalrkpiygjxhh.supabase.co";
+const supabaseAnonKey =
+  import.meta.env.VITE_SUPABASE_ANON_KEY ||
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ3YWRmcmJuYWxya3BpeWdqeGhoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI4NjU4OTcsImV4cCI6MjA2ODQ0MTg5N30.jUFLaVL_WGCtJCR4T2qxkzP5-8HpHKQnZqHLtgNUMCM";
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error(
-    "Missing Supabase environment variables. Please check your .env.local file."
+  console.error(
+    "Missing Supabase environment variables. Using fallback values."
   );
 }
 
