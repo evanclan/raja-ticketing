@@ -99,26 +99,93 @@ export default function QRScanner({ eventId, isOpen, onClose }) {
       setCheckInResult(null);
       setError("");
 
-      const response = await fetch(
-        `${
-          import.meta.env.VITE_API_BASE_URL || "http://localhost:3001"
-        }/api/check-in/verify`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ qrData }),
-        }
-      );
-
-      const result = await response.json();
-      setCheckInResult(result);
-
-      // Update stats after check-in
-      if (result.success) {
-        fetchStats();
+      // Parse QR code data and verify check-in directly with Supabase
+      let qrCodeData;
+      try {
+        qrCodeData = JSON.parse(qrData);
+      } catch {
+        setCheckInResult({
+          success: false,
+          message: "Invalid QR code format",
+          error: "QR code data is not valid JSON",
+        });
+        return;
       }
+
+      const { eventId, userId } = qrCodeData;
+
+      if (!eventId || !userId) {
+        setCheckInResult({
+          success: false,
+          message: "Invalid QR code",
+          error: "Missing event ID or user ID",
+        });
+        return;
+      }
+
+      // Verify the participant is registered for this event
+      const { data: registration, error: fetchError } = await supabase
+        .from("registrations")
+        .select(
+          `
+          id,
+          status,
+          checked_in,
+          users!inner(email, full_name)
+        `
+        )
+        .eq("event_id", eventId)
+        .eq("user_id", userId)
+        .eq("status", "approved")
+        .single();
+
+      if (fetchError || !registration) {
+        setCheckInResult({
+          success: false,
+          message: "Participant not found",
+          error: "No approved registration found for this participant",
+        });
+        return;
+      }
+
+      if (registration.checked_in) {
+        setCheckInResult({
+          success: false,
+          message: "Already checked in",
+          participant: registration.users,
+          timestamp: new Date().toLocaleString(),
+        });
+        return;
+      }
+
+      // Mark as checked in
+      const { error: updateError } = await supabase
+        .from("registrations")
+        .update({
+          checked_in: true,
+          checked_in_at: new Date().toISOString(),
+        })
+        .eq("id", registration.id);
+
+      if (updateError) {
+        setCheckInResult({
+          success: false,
+          message: "Check-in failed",
+          error: updateError.message,
+        });
+        return;
+      }
+
+      // Success!
+      setCheckInResult({
+        success: true,
+        message: "Check-in successful!",
+        participant: registration.users,
+        timestamp: new Date().toLocaleString(),
+      });
+
+      // Update stats after successful check-in
+      fetchStats();
 
       // Resume scanning after 3 seconds
       setTimeout(() => {
