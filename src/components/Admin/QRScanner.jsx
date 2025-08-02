@@ -11,21 +11,6 @@ export default function QRScanner({ eventId, isOpen, onClose }) {
   const videoRef = useRef(null);
   const scannerRef = useRef(null);
 
-  useEffect(() => {
-    if (isOpen && eventId) {
-      fetchStats();
-    }
-  }, [isOpen, eventId, fetchStats]);
-
-  useEffect(() => {
-    if (isOpen && videoRef.current) {
-      startScanner();
-    }
-    return () => {
-      stopScanner();
-    };
-  }, [isOpen, startScanner]);
-
   const fetchStats = useCallback(async () => {
     try {
       // Get check-in stats directly from Supabase
@@ -49,41 +34,6 @@ export default function QRScanner({ eventId, isOpen, onClose }) {
       console.error("Failed to fetch stats:", err);
     }
   }, [eventId]);
-
-  const startScanner = useCallback(async () => {
-    try {
-      setError("");
-
-      if (scannerRef.current) {
-        scannerRef.current.destroy();
-      }
-
-      const scanner = new QrScanner(
-        videoRef.current,
-        (result) => handleScanResult(result.data),
-        {
-          highlightScanRegion: true,
-          highlightCodeOutline: true,
-          preferredCamera: "environment", // Use back camera on mobile
-        }
-      );
-
-      scannerRef.current = scanner;
-      await scanner.start();
-      setScanning(true);
-    } catch (err) {
-      console.error("Scanner error:", err);
-      setError("Failed to start camera. Please check permissions.");
-    }
-  }, [handleScanResult]);
-
-  const stopScanner = () => {
-    if (scannerRef.current) {
-      scannerRef.current.destroy();
-      scannerRef.current = null;
-    }
-    setScanning(false);
-  };
 
   const handleScanResult = useCallback(
     async (qrData) => {
@@ -217,6 +167,56 @@ export default function QRScanner({ eventId, isOpen, onClose }) {
     },
     [eventId, lastResult]
   );
+
+  const startScanner = useCallback(async () => {
+    try {
+      setError("");
+
+      if (scannerRef.current) {
+        scannerRef.current.destroy();
+      }
+
+      const scanner = new QrScanner(
+        videoRef.current,
+        (result) => handleScanResult(result.data),
+        {
+          highlightScanRegion: true,
+          highlightCodeOutline: true,
+          preferredCamera: "environment", // Use back camera on mobile
+        }
+      );
+
+      scannerRef.current = scanner;
+      await scanner.start();
+      setScanning(true);
+    } catch (err) {
+      console.error("Scanner error:", err);
+      setError("Failed to start camera. Please check permissions.");
+    }
+  }, [handleScanResult]);
+
+  useEffect(() => {
+    if (isOpen && eventId) {
+      fetchStats();
+    }
+  }, [isOpen, eventId, fetchStats]);
+
+  useEffect(() => {
+    if (isOpen && videoRef.current) {
+      startScanner();
+    }
+    return () => {
+      stopScanner();
+    };
+  }, [isOpen, startScanner]);
+
+  const stopScanner = () => {
+    if (scannerRef.current) {
+      scannerRef.current.destroy();
+      scannerRef.current = null;
+    }
+    setScanning(false);
+  };
 
   const handleApproveEntrance = async () => {
     try {
