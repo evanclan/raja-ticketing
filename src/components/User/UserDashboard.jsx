@@ -77,14 +77,18 @@ export default function UserDashboard({ user }) {
       const { data, error } = await supabase
         .from("events")
         .select("*")
+        .eq("status", "active") // Only fetch active events
         .gte("event_date", now)
         .order("event_date", { ascending: true });
       if (error) throw error;
+      console.log("Fetched events:", data); // Debug log
       // Exclude already participated events
       const filtered = (data || []).filter((e) => !excludeIds.includes(e.id));
+      console.log("Filtered available events:", filtered); // Debug log
       setUpcomingEvents((prev) => [...prev, ...filtered]);
     } catch (err) {
       setError("Failed to fetch upcoming events: " + err.message);
+      console.error("Error fetching events:", err); // Debug log
     }
   };
 
