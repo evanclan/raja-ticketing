@@ -246,11 +246,15 @@ export default function QRScanner({ eventId, isOpen, onClose }) {
 
   const handleApproveEntrance = async () => {
     try {
+      // Get current admin user for check-in tracking
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      
       const { error: updateError } = await supabase
         .from("registrations")
         .update({
           checked_in: true,
           checked_in_at: new Date().toISOString(),
+          checked_in_by: currentUser?.id || null,
         })
         .eq("id", checkInResult.registrationId);
 
