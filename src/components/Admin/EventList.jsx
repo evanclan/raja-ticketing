@@ -2,6 +2,7 @@ import { useState } from "react";
 import { supabase } from "../../lib/supabase";
 import ParticipantsModal from "./ParticipantsModal";
 import QRScanner from "./QRScanner";
+import EventManagement from "./EventManagement";
 
 export default function EventList({ events, onEventDeleted, onEventUpdated }) {
   const [editingEvent, setEditingEvent] = useState(null);
@@ -16,6 +17,10 @@ export default function EventList({ events, onEventDeleted, onEventUpdated }) {
   // QR Scanner state
   const [scannerOpen, setScannerOpen] = useState(false);
   const [selectedEventForScanner, setSelectedEventForScanner] = useState(null);
+
+  // Event Management state
+  const [eventManagementOpen, setEventManagementOpen] = useState(false);
+  const [selectedEventForManagement, setSelectedEventForManagement] = useState(null);
 
   const handleDelete = async (eventId) => {
     if (!confirm("Are you sure you want to delete this event?")) {
@@ -88,6 +93,17 @@ export default function EventList({ events, onEventDeleted, onEventUpdated }) {
   const handleCloseScanner = () => {
     setScannerOpen(false);
     setSelectedEventForScanner(null);
+  };
+
+  // Event Management handlers
+  const handleStartEvent = (event) => {
+    setSelectedEventForManagement(event);
+    setEventManagementOpen(true);
+  };
+
+  const handleCloseEventManagement = () => {
+    setEventManagementOpen(false);
+    setSelectedEventForManagement(null);
   };
 
   const formatDate = (dateString, timeString) => {
@@ -305,7 +321,7 @@ export default function EventList({ events, onEventDeleted, onEventUpdated }) {
               </button>
 
               <button
-                onClick={() => handleOpenScanner(event)}
+                onClick={() => handleStartEvent(event)}
                 style={{
                   padding: "0.5rem 1rem",
                   backgroundColor: "#7c3aed",
@@ -321,7 +337,7 @@ export default function EventList({ events, onEventDeleted, onEventUpdated }) {
                   gap: "0.25rem",
                 }}
               >
-                📱 Check-in Scanner
+                🎉 Start Event
               </button>
 
               <button
@@ -427,6 +443,13 @@ export default function EventList({ events, onEventDeleted, onEventUpdated }) {
         eventId={selectedEventForScanner?.id}
         isOpen={scannerOpen}
         onClose={handleCloseScanner}
+      />
+
+      {/* Event Management Modal */}
+      <EventManagement
+        event={selectedEventForManagement}
+        isOpen={eventManagementOpen}
+        onClose={handleCloseEventManagement}
       />
     </div>
   );
