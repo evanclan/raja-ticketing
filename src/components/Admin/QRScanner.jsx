@@ -87,15 +87,7 @@ export default function QRScanner({ eventId, isOpen, onClose }) {
         // Verify the participant is registered for this event
         const { data: registration, error: fetchError } = await supabase
           .from("registrations")
-          .select(
-            `
-          id,
-          status,
-          checked_in,
-          created_at,
-          users!inner(email, full_name)
-        `
-          )
+          .select("id, status, checked_in, created_at")
           .eq("event_id", qrEventId)
           .eq("user_id", userId)
           .eq("status", "approved")
@@ -109,6 +101,34 @@ export default function QRScanner({ eventId, isOpen, onClose }) {
           });
           return;
         }
+
+        // Get user details from auth since users table might not exist
+        let userInfo;
+        try {
+          // Try users table first
+          const { data: userData, error: userError } = await supabase
+            .from("users")
+            .select("email, full_name")
+            .eq("id", userId)
+            .single();
+          
+          if (userError || !userData) {
+            // Fallback: get user info from auth
+            const { data: authUser } = await supabase.auth.admin.getUserById(userId);
+            userInfo = {
+              email: authUser?.user?.email || 'Unknown',
+              full_name: authUser?.user?.user_metadata?.full_name || authUser?.user?.email || 'Unknown'
+            };
+          } else {
+            userInfo = userData;
+          }
+        } catch (err) {
+          // Final fallback
+          userInfo = { email: 'Unknown', full_name: 'Unknown' };
+        }
+
+        // Add user info to registration
+        registration.users = userInfo;
 
         if (registration.checked_in) {
           // Fetch family members for already checked in user too
