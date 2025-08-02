@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import QrScanner from "qr-scanner";
 import { supabase } from "../../lib/supabase";
 
@@ -15,7 +15,7 @@ export default function QRScanner({ eventId, isOpen, onClose }) {
     if (isOpen && eventId) {
       fetchStats();
     }
-  }, [isOpen, eventId]);
+  }, [isOpen, eventId, fetchStats]);
 
   useEffect(() => {
     if (isOpen && videoRef.current) {
@@ -24,9 +24,9 @@ export default function QRScanner({ eventId, isOpen, onClose }) {
     return () => {
       stopScanner();
     };
-  }, [isOpen]);
+  }, [isOpen, startScanner]);
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       // Get check-in stats directly from Supabase
       const { data, error } = await supabase
@@ -48,9 +48,9 @@ export default function QRScanner({ eventId, isOpen, onClose }) {
     } catch (err) {
       console.error("Failed to fetch stats:", err);
     }
-  };
+  }, [eventId]);
 
-  const startScanner = async () => {
+  const startScanner = useCallback(async () => {
     try {
       setError("");
 
@@ -75,7 +75,7 @@ export default function QRScanner({ eventId, isOpen, onClose }) {
       console.error("Scanner error:", err);
       setError("Failed to start camera. Please check permissions.");
     }
-  };
+  }, [handleScanResult]);
 
   const stopScanner = () => {
     if (scannerRef.current) {
@@ -85,120 +85,161 @@ export default function QRScanner({ eventId, isOpen, onClose }) {
     setScanning(false);
   };
 
-  const handleScanResult = async (qrData) => {
-    // Prevent duplicate scans
-    if (qrData === lastResult) return;
-    setLastResult(qrData);
+  const handleScanResult = useCallback(
+    async (qrData) => {
+      // Prevent duplicate scans
+      if (qrData === lastResult) return;
+      setLastResult(qrData);
 
-    // Pause scanning temporarily
-    if (scannerRef.current) {
-      scannerRef.current.pause();
-    }
+      // Pause scanning temporarily
+      if (scannerRef.current) {
+        scannerRef.current.pause();
+      }
 
-    try {
-      setCheckInResult(null);
-      setError("");
-
-      // Parse QR code data and verify check-in directly with Supabase
-      let qrCodeData;
       try {
-        qrCodeData = JSON.parse(qrData);
-      } catch {
-        setCheckInResult({
-          success: false,
-          message: "Invalid QR code format",
-          error: "QR code data is not valid JSON",
-        });
-        return;
-      }
+        setCheckInResult(null);
+        setError("");
 
-      const { eventId, userId } = qrCodeData;
+        // Parse QR code data and verify check-in directly with Supabase
+        let qrCodeData;
+        try {
+          qrCodeData = JSON.parse(qrData);
+        } catch {
+          setCheckInResult({
+            success: false,
+            message: "Invalid QR code format",
+            error: "QR code data is not valid JSON",
+          });
+          return;
+        }
 
-      if (!eventId || !userId) {
-        setCheckInResult({
-          success: false,
-          message: "Invalid QR code",
-          error: "Missing event ID or user ID",
-        });
-        return;
-      }
+        const { eventId: qrEventId, userId } = qrCodeData;
 
-      // Verify the participant is registered for this event
-      const { data: registration, error: fetchError } = await supabase
-        .from("registrations")
-        .select(
-          `
+        if (!qrEventId || !userId) {
+          setCheckInResult({
+            success: false,
+            message: "Invalid QR code",
+            error: "Missing event ID or user ID",
+          });
+          return;
+        }
+
+        // Check if this QR code is for the current event being scanned
+        if (qrEventId !== eventId) {
+          setCheckInResult({
+            success: false,
+            message: "Invalid QR code",
+            error: "This QR code is not for the current event",
+          });
+          return;
+        }
+
+        // Verify the participant is registered for this event
+        const { data: registration, error: fetchError } = await supabase
+          .from("registrations")
+          .select(
+            `
           id,
           status,
           checked_in,
+          created_at,
           users!inner(email, full_name)
         `
-        )
-        .eq("event_id", eventId)
-        .eq("user_id", userId)
-        .eq("status", "approved")
-        .single();
+          )
+          .eq("event_id", qrEventId)
+          .eq("user_id", userId)
+          .eq("status", "approved")
+          .single();
 
-      if (fetchError || !registration) {
-        setCheckInResult({
-          success: false,
-          message: "Participant not found",
-          error: "No approved registration found for this participant",
-        });
-        return;
-      }
+        if (fetchError || !registration) {
+          setCheckInResult({
+            success: false,
+            message: "Participant not found",
+            error: "No approved registration found for this participant",
+          });
+          return;
+        }
 
-      if (registration.checked_in) {
-        // Fetch family members for already checked in user too
+        if (registration.checked_in) {
+          // Fetch family members for already checked in user too
+          const { data: familyMembers } = await supabase
+            .from("family_members")
+            .select("full_name, age, relationship, notes")
+            .eq("user_id", userId)
+            .order("created_at", { ascending: true });
+
+          setCheckInResult({
+            success: false,
+            message: "Already checked in",
+            participant: registration.users,
+            familyMembers: familyMembers || [],
+            registrationDate: new Date(
+              registration.created_at
+            ).toLocaleDateString(),
+            timestamp: new Date().toLocaleString(),
+            alreadyCheckedIn: true,
+          });
+          return;
+        }
+
+        // Fetch family members for this user
         const { data: familyMembers } = await supabase
           .from("family_members")
           .select("full_name, age, relationship, notes")
           .eq("user_id", userId)
           .order("created_at", { ascending: true });
 
+        // Show participant details for admin approval (don't auto check-in)
         setCheckInResult({
-          success: false,
-          message: "Already checked in",
+          success: null, // null means pending approval
+          message: "Participant verification",
           participant: registration.users,
           familyMembers: familyMembers || [],
-          timestamp: new Date().toLocaleString(),
-          alreadyCheckedIn: true,
+          registrationDate: new Date(
+            registration.created_at
+          ).toLocaleDateString(),
+          registrationId: registration.id,
+          userId: userId,
+          pendingApproval: true,
         });
-        return;
-      }
 
-      // Mark as checked in
+        // Don't auto-resume scanning - wait for admin decision
+      } catch (err) {
+        setError("Check-in verification failed: " + err.message);
+        // Resume scanning after error
+        setTimeout(() => {
+          if (scannerRef.current) {
+            scannerRef.current.start();
+          }
+          setLastResult(null);
+        }, 2000);
+      }
+    },
+    [eventId, lastResult]
+  );
+
+  const handleApproveEntrance = async () => {
+    try {
       const { error: updateError } = await supabase
         .from("registrations")
         .update({
           checked_in: true,
           checked_in_at: new Date().toISOString(),
         })
-        .eq("id", registration.id);
+        .eq("id", checkInResult.registrationId);
 
       if (updateError) {
-        setCheckInResult({
-          success: false,
-          message: "Check-in failed",
-          error: updateError.message,
-        });
+        setError("Check-in failed: " + updateError.message);
         return;
       }
 
-      // Fetch family members for this user
-      const { data: familyMembers } = await supabase
-        .from("family_members")
-        .select("full_name, age, relationship, notes")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: true });
-
-      // Success!
+      // Update result to show success
       setCheckInResult({
+        ...checkInResult,
         success: true,
-        message: "Check-in successful!",
-        participant: registration.users,
-        familyMembers: familyMembers || [],
+        message: "Entrance approved - Check-in successful!",
         timestamp: new Date().toLocaleString(),
+        pendingApproval: false,
       });
 
       // Update stats after successful check-in
@@ -212,15 +253,26 @@ export default function QRScanner({ eventId, isOpen, onClose }) {
         setLastResult(null);
       }, 3000);
     } catch (err) {
-      setError("Check-in verification failed: " + err.message);
-      // Resume scanning after error
-      setTimeout(() => {
-        if (scannerRef.current) {
-          scannerRef.current.start();
-        }
-        setLastResult(null);
-      }, 2000);
+      setError("Failed to approve entrance: " + err.message);
     }
+  };
+
+  const handleRejectEntrance = () => {
+    // Update result to show rejection
+    setCheckInResult({
+      ...checkInResult,
+      success: false,
+      message: "Entrance rejected by admin",
+      pendingApproval: false,
+    });
+
+    // Resume scanning after 2 seconds
+    setTimeout(() => {
+      if (scannerRef.current) {
+        scannerRef.current.start();
+      }
+      setLastResult(null);
+    }, 2000);
   };
 
   const handleClose = () => {
@@ -298,11 +350,9 @@ export default function QRScanner({ eventId, isOpen, onClose }) {
                   color: "#059669",
                 }}
               >
-                {stats.approved}
+                {stats.total}
               </div>
-              <div style={{ fontSize: "0.75rem", color: "#6b7280" }}>
-                Approved
-              </div>
+              <div style={{ fontSize: "0.75rem", color: "#6b7280" }}>Total</div>
             </div>
             <div
               style={{
@@ -340,9 +390,11 @@ export default function QRScanner({ eventId, isOpen, onClose }) {
                   color: "#f59e0b",
                 }}
               >
-                {stats.checkInRate}%
+                {stats.pending}
               </div>
-              <div style={{ fontSize: "0.75rem", color: "#6b7280" }}>Rate</div>
+              <div style={{ fontSize: "0.75rem", color: "#6b7280" }}>
+                Pending
+              </div>
             </div>
           </div>
         )}
@@ -388,7 +440,7 @@ export default function QRScanner({ eventId, isOpen, onClose }) {
         {/* Results */}
         {checkInResult && (
           <div style={{ marginBottom: "1.5rem" }}>
-            {checkInResult.success ? (
+            {checkInResult.success === true ? (
               <div
                 style={{
                   padding: "1rem",
@@ -414,6 +466,15 @@ export default function QRScanner({ eventId, isOpen, onClose }) {
                   {checkInResult.participant.full_name ||
                     checkInResult.participant.name}{" "}
                   ({checkInResult.participant.email})
+                </div>
+                <div
+                  style={{
+                    color: "#047857",
+                    fontSize: "0.75rem",
+                    marginTop: "0.5rem",
+                  }}
+                >
+                  Registered: {checkInResult.registrationDate}
                 </div>
                 {checkInResult.familyMembers &&
                   checkInResult.familyMembers.length > 0 && (
@@ -460,6 +521,172 @@ export default function QRScanner({ eventId, isOpen, onClose }) {
                     </div>
                   )}
               </div>
+            ) : checkInResult.pendingApproval ? (
+              <div
+                style={{
+                  padding: "1rem",
+                  backgroundColor: "#fef3c7",
+                  border: "2px solid #3b82f6",
+                  borderRadius: "0.75rem",
+                  textAlign: "center",
+                }}
+              >
+                <div style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>
+                  🔍
+                </div>
+                <div
+                  style={{
+                    fontWeight: "600",
+                    color: "#1d4ed8",
+                    marginBottom: "1rem",
+                  }}
+                >
+                  Participant Verification
+                </div>
+
+                {/* Participant Info */}
+                <div
+                  style={{
+                    backgroundColor: "#f8fafc",
+                    borderRadius: "0.5rem",
+                    padding: "1rem",
+                    marginBottom: "1rem",
+                    textAlign: "left",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontWeight: "600",
+                      color: "#374151",
+                      marginBottom: "0.5rem",
+                    }}
+                  >
+                    👤 Participant Details:
+                  </div>
+                  <div
+                    style={{
+                      color: "#6b7280",
+                      fontSize: "0.875rem",
+                      marginBottom: "0.25rem",
+                    }}
+                  >
+                    <strong>Name:</strong>{" "}
+                    {checkInResult.participant.full_name ||
+                      checkInResult.participant.name}
+                  </div>
+                  <div
+                    style={{
+                      color: "#6b7280",
+                      fontSize: "0.875rem",
+                      marginBottom: "0.25rem",
+                    }}
+                  >
+                    <strong>Email:</strong> {checkInResult.participant.email}
+                  </div>
+                  <div style={{ color: "#6b7280", fontSize: "0.875rem" }}>
+                    <strong>Registered:</strong>{" "}
+                    {checkInResult.registrationDate}
+                  </div>
+                </div>
+
+                {/* Family Members */}
+                {checkInResult.familyMembers &&
+                  checkInResult.familyMembers.length > 0 && (
+                    <div
+                      style={{
+                        backgroundColor: "#f0f9ff",
+                        borderRadius: "0.5rem",
+                        padding: "1rem",
+                        marginBottom: "1rem",
+                        textAlign: "left",
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: "0.875rem",
+                          fontWeight: "600",
+                          color: "#1e40af",
+                          marginBottom: "0.5rem",
+                        }}
+                      >
+                        👨‍👩‍👧‍👦 Family Members ({checkInResult.familyMembers.length}
+                        ):
+                      </div>
+                      <div style={{ fontSize: "0.75rem", color: "#1e40af" }}>
+                        {checkInResult.familyMembers.map((member, index) => (
+                          <div
+                            key={index}
+                            style={{
+                              marginBottom: "0.5rem",
+                              padding: "0.25rem",
+                              backgroundColor: "#dbeafe",
+                              borderRadius: "0.25rem",
+                            }}
+                          >
+                            <div>
+                              <strong>{member.full_name}</strong>
+                            </div>
+                            {member.age && <div>Age: {member.age}</div>}
+                            {member.relationship && (
+                              <div>Relationship: {member.relationship}</div>
+                            )}
+                            {member.notes && (
+                              <div
+                                style={{
+                                  fontSize: "0.7rem",
+                                  color: "#3730a3",
+                                  fontStyle: "italic",
+                                }}
+                              >
+                                Note: {member.notes}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                {/* Approval Buttons */}
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "0.75rem",
+                    justifyContent: "center",
+                  }}
+                >
+                  <button
+                    onClick={handleApproveEntrance}
+                    style={{
+                      padding: "0.75rem 1.5rem",
+                      backgroundColor: "#10b981",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "0.5rem",
+                      fontWeight: "600",
+                      cursor: "pointer",
+                      fontSize: "0.875rem",
+                    }}
+                  >
+                    ✅ Approve Entrance
+                  </button>
+                  <button
+                    onClick={handleRejectEntrance}
+                    style={{
+                      padding: "0.75rem 1.5rem",
+                      backgroundColor: "#ef4444",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "0.5rem",
+                      fontWeight: "600",
+                      cursor: "pointer",
+                      fontSize: "0.875rem",
+                    }}
+                  >
+                    ❌ Reject Entrance
+                  </button>
+                </div>
+              </div>
             ) : checkInResult.alreadyCheckedIn ? (
               <div
                 style={{
@@ -486,6 +713,9 @@ export default function QRScanner({ eventId, isOpen, onClose }) {
                   {checkInResult.participant.full_name ||
                     checkInResult.participant.name}{" "}
                   ({checkInResult.participant.email})
+                </div>
+                <div style={{ color: "#a16207", fontSize: "0.75rem" }}>
+                  Registered: {checkInResult.registrationDate}
                 </div>
                 <div style={{ color: "#a16207", fontSize: "0.75rem" }}>
                   Checked in: {checkInResult.timestamp}

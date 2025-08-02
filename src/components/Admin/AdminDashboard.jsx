@@ -39,16 +39,6 @@ export default function AdminDashboard() {
     setPendingLoading(true);
     setPendingError("");
     try {
-      console.log("Fetching pending registrations..."); // Debug log
-      
-      // Get all registrations with status details
-      const { data: allRegs, error: allError } = await supabase
-        .from("registrations")
-        .select("id, user_id, event_id, status")
-        .order("created_at", { ascending: false });
-      
-      console.log("All registrations:", allRegs); // Debug log
-      
       // Get pending registrations with user and event details separately
       const { data: pendingRegs, error } = await supabase
         .from("registrations")
@@ -56,8 +46,6 @@ export default function AdminDashboard() {
         .eq("status", "pending");
       
       if (error) throw error;
-      
-      console.log("Pending registrations:", pendingRegs); // Debug log
       
       if (!pendingRegs || pendingRegs.length === 0) {
         setPendingRegs([]);
@@ -76,12 +64,9 @@ export default function AdminDashboard() {
         supabase.from("events").select("id, title").in("id", eventIds)
       ]);
 
-      console.log("Users data:", usersData, "Events data:", eventsData); // Debug log
-
       // If users table doesn't exist or has issues, try auth.users
       let finalUsersData = usersData;
       if (usersError || !usersData || usersData.length === 0) {
-        console.warn("Users table issue, trying auth approach:", usersError);
         finalUsersData = await Promise.all(
           userIds.map(async (userId) => {
             const { data: authUser } = await supabase.auth.admin.getUserById(userId);
@@ -104,10 +89,8 @@ export default function AdminDashboard() {
         };
       });
 
-      console.log("Final pending registrations:", pendingWithDetails); // Debug log
       setPendingRegs(pendingWithDetails);
     } catch (err) {
-      console.error("Error fetching pending registrations:", err); // Debug log
       setPendingError("Failed to fetch pending registrations: " + err.message);
     } finally {
       setPendingLoading(false);
@@ -115,16 +98,12 @@ export default function AdminDashboard() {
   };
 
   const handleApprove = async (regId) => {
-    console.log("Approving registration:", regId); // Debug log
     const { error } = await supabase
       .from("registrations")
       .update({ status: "approved" })
       .eq("id", regId);
 
-    if (error) {
-      console.error("Error approving registration:", error); // Debug log
-    } else {
-      console.log("Registration approved successfully"); // Debug log
+    if (!error) {
       fetchPendingRegs(); // Refresh pending list
       // Note: Participants modal should refresh when opened again
     }

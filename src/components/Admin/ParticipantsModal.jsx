@@ -18,8 +18,6 @@ export default function ParticipantsModal({ event, isOpen, onClose }) {
     setParticipants([]);
 
     try {
-      console.log("Fetching participants for event:", event.id); // Debug log
-      
       // First, get all approved registrations for this event
       const { data: registrations, error: regError } = await supabase
         .from("registrations")
@@ -30,8 +28,6 @@ export default function ParticipantsModal({ event, isOpen, onClose }) {
       if (regError) {
         throw new Error(regError.message);
       }
-
-      console.log("Found registrations:", registrations); // Debug log
 
       if (!registrations || registrations.length === 0) {
         setParticipants([]);
@@ -46,7 +42,6 @@ export default function ParticipantsModal({ event, isOpen, onClose }) {
         .in("id", userIds);
 
       if (usersError) {
-        console.warn("Could not fetch from users table, trying auth.users:", usersError);
         // Fallback: get user info from auth metadata
         const participantsWithUserInfo = await Promise.all(
           registrations.map(async (reg) => {
@@ -80,8 +75,6 @@ export default function ParticipantsModal({ event, isOpen, onClose }) {
         return;
       }
 
-      console.log("Found users:", usersData); // Debug log
-
       // Combine registration and user data
       const participantsWithUserInfo = registrations.map(reg => {
         const user = usersData.find(u => u.id === reg.user_id);
@@ -106,7 +99,6 @@ export default function ParticipantsModal({ event, isOpen, onClose }) {
         })
       );
 
-      console.log("Final participants with family:", participantsWithFamily); // Debug log
       setParticipants(participantsWithFamily);
     } catch (err) {
       setError(err.message);
