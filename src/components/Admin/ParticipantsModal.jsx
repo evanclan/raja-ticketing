@@ -6,12 +6,6 @@ export default function ParticipantsModal({ event, isOpen, onClose }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    if (isOpen && event) {
-      fetchParticipants();
-    }
-  }, [isOpen, event]);
-
   const fetchParticipants = async () => {
     setLoading(true);
     setError("");
@@ -106,6 +100,12 @@ export default function ParticipantsModal({ event, isOpen, onClose }) {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (isOpen && event) {
+      fetchParticipants();
+    }
+  }, [isOpen, event]);
 
   if (!isOpen) return null;
 

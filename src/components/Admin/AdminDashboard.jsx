@@ -11,11 +11,6 @@ export default function AdminDashboard() {
   const [pendingLoading, setPendingLoading] = useState(false);
   const [pendingError, setPendingError] = useState("");
 
-  useEffect(() => {
-    fetchEvents();
-    fetchPendingRegs();
-  }, []);
-
   const fetchEvents = async () => {
     try {
       const { data, error } = await supabase
@@ -96,6 +91,11 @@ export default function AdminDashboard() {
       setPendingLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchEvents();
+    fetchPendingRegs();
+  }, []);
 
   const handleApprove = async (regId) => {
     const { error } = await supabase
