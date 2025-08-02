@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabase";
 import ParticipantQRCode from "./ParticipantQRCode";
+import FamilyRegistration from "./FamilyRegistration";
 
 // Helper to filter unique events by id
 function uniqueById(arr) {
@@ -146,6 +147,9 @@ export default function UserDashboard({ user }) {
       >
         User Dashboard
       </h2>
+
+      {/* Family Registration Section */}
+      <FamilyRegistration user={user} />
 
       {error && (
         <div

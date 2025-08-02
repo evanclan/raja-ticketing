@@ -36,7 +36,22 @@ export default function ParticipantsModal({ event, isOpen, onClose }) {
         throw new Error(error.message);
       }
 
-      setParticipants(data || []);
+      // Get family member counts for each participant
+      const participantsWithFamily = await Promise.all(
+        (data || []).map(async (participant) => {
+          const { data: familyMembers } = await supabase
+            .from("family_members")
+            .select("id")
+            .eq("user_id", participant.user_id);
+
+          return {
+            ...participant,
+            familyMemberCount: familyMembers ? familyMembers.length : 0,
+          };
+        })
+      );
+
+      setParticipants(participantsWithFamily);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -116,6 +131,17 @@ export default function ParticipantsModal({ event, isOpen, onClose }) {
           <div>
             <p style={{ marginBottom: "1rem", color: "#6b7280" }}>
               Found {participants.length} approved participant(s)
+              {participants.some((p) => p.familyMemberCount > 0) && (
+                <span style={{ color: "#3b82f6", fontWeight: "500" }}>
+                  {" "}
+                  +{" "}
+                  {participants.reduce(
+                    (sum, p) => sum + p.familyMemberCount,
+                    0
+                  )}{" "}
+                  family members
+                </span>
+              )}
             </p>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
@@ -145,20 +171,53 @@ export default function ParticipantsModal({ event, isOpen, onClose }) {
                       borderBottom: "1px solid #e5e7eb",
                     }}
                   >
+                    Family
+                  </th>
+                  <th
+                    style={{
+                      padding: "0.75rem",
+                      textAlign: "left",
+                      borderBottom: "1px solid #e5e7eb",
+                    }}
+                  >
                     Registered
                   </th>
                 </tr>
               </thead>
               <tbody>
-                {participants.map((participant) => (
+                {participants.map((participant, index) => (
                   <tr
-                    key={participant.id}
+                    key={participant.user_id || index}
                     style={{ borderBottom: "1px solid #e5e7eb" }}
                   >
-                    <td style={{ padding: "0.75rem" }}>{participant.email}</td>
-                    <td style={{ padding: "0.75rem" }}>{participant.name}</td>
                     <td style={{ padding: "0.75rem" }}>
-                      {new Date(participant.registeredAt).toLocaleDateString()}
+                      {participant.users?.email}
+                    </td>
+                    <td style={{ padding: "0.75rem" }}>
+                      {participant.users?.full_name || "N/A"}
+                    </td>
+                    <td style={{ padding: "0.75rem" }}>
+                      {participant.familyMemberCount > 0 ? (
+                        <span
+                          style={{
+                            backgroundColor: "#dbeafe",
+                            color: "#1e40af",
+                            padding: "0.25rem 0.5rem",
+                            borderRadius: "0.375rem",
+                            fontSize: "0.75rem",
+                            fontWeight: "500",
+                          }}
+                        >
+                          👨‍👩‍👧‍👦 {participant.familyMemberCount}
+                        </span>
+                      ) : (
+                        <span style={{ color: "#6b7280", fontSize: "0.75rem" }}>
+                          None
+                        </span>
+                      )}
+                    </td>
+                    <td style={{ padding: "0.75rem" }}>
+                      {new Date(participant.created_at).toLocaleDateString()}
                     </td>
                   </tr>
                 ))}

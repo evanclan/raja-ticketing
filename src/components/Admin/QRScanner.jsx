@@ -149,11 +149,20 @@ export default function QRScanner({ eventId, isOpen, onClose }) {
       }
 
       if (registration.checked_in) {
+        // Fetch family members for already checked in user too
+        const { data: familyMembers } = await supabase
+          .from("family_members")
+          .select("full_name, age, relationship, notes")
+          .eq("user_id", userId)
+          .order("created_at", { ascending: true });
+
         setCheckInResult({
           success: false,
           message: "Already checked in",
           participant: registration.users,
+          familyMembers: familyMembers || [],
           timestamp: new Date().toLocaleString(),
+          alreadyCheckedIn: true,
         });
         return;
       }
@@ -176,11 +185,19 @@ export default function QRScanner({ eventId, isOpen, onClose }) {
         return;
       }
 
+      // Fetch family members for this user
+      const { data: familyMembers } = await supabase
+        .from("family_members")
+        .select("full_name, age, relationship, notes")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: true });
+
       // Success!
       setCheckInResult({
         success: true,
         message: "Check-in successful!",
         participant: registration.users,
+        familyMembers: familyMembers || [],
         timestamp: new Date().toLocaleString(),
       });
 
@@ -394,9 +411,54 @@ export default function QRScanner({ eventId, isOpen, onClose }) {
                   Check-in Successful!
                 </div>
                 <div style={{ color: "#059669", fontSize: "0.875rem" }}>
-                  {checkInResult.participant.name} (
-                  {checkInResult.participant.email})
+                  {checkInResult.participant.full_name ||
+                    checkInResult.participant.name}{" "}
+                  ({checkInResult.participant.email})
                 </div>
+                {checkInResult.familyMembers &&
+                  checkInResult.familyMembers.length > 0 && (
+                    <div
+                      style={{
+                        marginTop: "1rem",
+                        padding: "0.75rem",
+                        backgroundColor: "#f0fdf4",
+                        borderRadius: "0.5rem",
+                        border: "1px solid #bbf7d0",
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: "0.875rem",
+                          fontWeight: "600",
+                          color: "#166534",
+                          marginBottom: "0.5rem",
+                        }}
+                      >
+                        👨‍👩‍👧‍👦 Family Members ({checkInResult.familyMembers.length}
+                        ):
+                      </div>
+                      <div style={{ fontSize: "0.75rem", color: "#15803d" }}>
+                        {checkInResult.familyMembers.map((member, index) => (
+                          <div key={index} style={{ marginBottom: "0.25rem" }}>
+                            • {member.full_name}
+                            {member.age && ` (${member.age})`}
+                            {member.relationship && ` - ${member.relationship}`}
+                            {member.notes && (
+                              <div
+                                style={{
+                                  fontSize: "0.7rem",
+                                  color: "#16a34a",
+                                  marginLeft: "0.5rem",
+                                }}
+                              >
+                                Note: {member.notes}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
               </div>
             ) : checkInResult.alreadyCheckedIn ? (
               <div
@@ -421,14 +483,57 @@ export default function QRScanner({ eventId, isOpen, onClose }) {
                   Already Checked In
                 </div>
                 <div style={{ color: "#a16207", fontSize: "0.875rem" }}>
-                  {checkInResult.participant.name}
+                  {checkInResult.participant.full_name ||
+                    checkInResult.participant.name}{" "}
+                  ({checkInResult.participant.email})
                 </div>
                 <div style={{ color: "#a16207", fontSize: "0.75rem" }}>
-                  Checked in:{" "}
-                  {new Date(
-                    checkInResult.participant.checkedInAt
-                  ).toLocaleString()}
+                  Checked in: {checkInResult.timestamp}
                 </div>
+                {checkInResult.familyMembers &&
+                  checkInResult.familyMembers.length > 0 && (
+                    <div
+                      style={{
+                        marginTop: "1rem",
+                        padding: "0.75rem",
+                        backgroundColor: "#fef7cd",
+                        borderRadius: "0.5rem",
+                        border: "1px solid #fde047",
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: "0.875rem",
+                          fontWeight: "600",
+                          color: "#a16207",
+                          marginBottom: "0.5rem",
+                        }}
+                      >
+                        👨‍👩‍👧‍👦 Family Members ({checkInResult.familyMembers.length}
+                        ):
+                      </div>
+                      <div style={{ fontSize: "0.75rem", color: "#92400e" }}>
+                        {checkInResult.familyMembers.map((member, index) => (
+                          <div key={index} style={{ marginBottom: "0.25rem" }}>
+                            • {member.full_name}
+                            {member.age && ` (${member.age})`}
+                            {member.relationship && ` - ${member.relationship}`}
+                            {member.notes && (
+                              <div
+                                style={{
+                                  fontSize: "0.7rem",
+                                  color: "#a16207",
+                                  marginLeft: "0.5rem",
+                                }}
+                              >
+                                Note: {member.notes}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
               </div>
             ) : (
               <div

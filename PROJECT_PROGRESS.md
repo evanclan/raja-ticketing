@@ -181,4 +181,17 @@ The system now handles the complete flow:
 - Participation and event management are fully functional.
 - **NEW**: Admin creation system now works correctly via SuperuserDashboard
 - **LATEST**: Participants system displays approved users with email/name
+- **CLEANUP COMPLETE**: Removed all unused files, folders, and dependencies:
+  - Removed server.js and backend-related code (frontend-only architecture)
+  - Cleaned up unused SQL migration files
+  - Removed unused directories: api/, scripts/, supabase/, .vscode/, .cursor/, .vercel/
+  - Updated package.json to remove unused dependencies (express, cors, dotenv, react-router-dom, etc.)
+  - Project is now clean and production-ready
+- **NEW: FAMILY REGISTRATION SYSTEM**: Complete family member registration feature:
+  - Users can register family members under their account (name, age, relationship, notes)
+  - Family members don't need individual QR codes - main user's QR covers everyone
+  - QR scanner shows all family members when scanning participant codes
+  - Participants modal displays family member counts for better event planning
+  - Includes relationship dropdown, age tracking, and notes for special requirements
+  - Full database schema with RLS policies and proper indexing
 - See code for further details and UI structure.
