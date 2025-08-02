@@ -7,11 +7,4 @@ export default defineConfig({
   server: {
     host: true, // Allow external connections
   },
-  base: "/", // Use absolute paths for assets on Vercel
-  build: {
-    outDir: "public",
-    assetsDir: "assets",
-    sourcemap: false,
-    emptyOutDir: false, // Don't empty public dir (it has _headers)
-  },
 });
