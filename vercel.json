@@ -1,12 +1,7 @@
 {
-  "version": 2,
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "cleanUrls": false,
-  "trailingSlash": false,
   "rewrites": [
     {
-      "source": "/((?!assets/.*|.*\\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)).*)",
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ]
