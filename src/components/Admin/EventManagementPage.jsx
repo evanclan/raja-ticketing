@@ -7,8 +7,9 @@ export default function EventManagementPage({ eventId, onBack, currentUser }) {
   const [stats, setStats] = useState({ 
     totalRegistered: 0, 
     totalCheckedIn: 0, 
-    totalPending: 0, 
-    totalFamilyMembers: 0 
+    totalPending: 0,
+    checkedInUsers: 0,
+    totalFamilyMembers: 0
   });
   const [checkedInParticipants, setCheckedInParticipants] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -44,11 +45,15 @@ export default function EventManagementPage({ eventId, onBack, currentUser }) {
         await fetchStatsManually();
       } else if (statsData && statsData.length > 0) {
         const stats = statsData[0];
+        const checkedInUsers = stats.total_checked_in || 0;
+        const familyMembers = stats.total_family_members || 0;
+        
         setStats({
           totalRegistered: stats.total_registered || 0,
-          totalCheckedIn: stats.total_checked_in || 0,
+          totalCheckedIn: checkedInUsers + familyMembers, // Include family members in total
           totalPending: stats.total_pending || 0,
-          totalFamilyMembers: stats.total_family_members || 0
+          checkedInUsers: checkedInUsers,
+          totalFamilyMembers: familyMembers
         });
       }
 
@@ -134,18 +139,31 @@ export default function EventManagementPage({ eventId, onBack, currentUser }) {
     // Count checked-in from registrations table (old method)
     const { data: regWithCheckIn } = await supabase
       .from("registrations")
-      .select("checked_in_at")
+      .select("checked_in_at, user_id")
       .eq("event_id", eventId)
       .eq("status", "approved")
       .not("checked_in_at", "is", null);
 
-    const totalCheckedIn = regWithCheckIn?.length || 0;
+    const checkedInUsers = regWithCheckIn?.length || 0;
+    
+    // Get family member counts for checked-in users
+    let totalFamilyMembers = 0;
+    if (regWithCheckIn && regWithCheckIn.length > 0) {
+      const userIds = regWithCheckIn.map(r => r.user_id);
+      const { data: familyData } = await supabase
+        .from("family_members")
+        .select("user_id")
+        .in("user_id", userIds);
+      
+      totalFamilyMembers = familyData?.length || 0;
+    }
 
     setStats({
       totalRegistered,
-      totalCheckedIn,
-      totalPending: totalRegistered - totalCheckedIn,
-      totalFamilyMembers: 0 // Can't calculate without check-ins table
+      totalCheckedIn: checkedInUsers + totalFamilyMembers, // Include family members
+      totalPending: totalRegistered - checkedInUsers,
+      checkedInUsers,
+      totalFamilyMembers
     });
   };
 
@@ -361,7 +379,7 @@ export default function EventManagementPage({ eventId, onBack, currentUser }) {
           {/* Stats Cards */}
           <div style={{ 
             display: "grid", 
-            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", 
+            gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", 
             gap: "1rem",
             marginBottom: "1.5rem"
           }}>
@@ -391,7 +409,10 @@ export default function EventManagementPage({ eventId, onBack, currentUser }) {
                 {stats.totalCheckedIn}
               </div>
               <div style={{ fontSize: "0.875rem", color: "#6b7280", fontWeight: "500" }}>
-                Checked In
+                Total Checked In
+              </div>
+              <div style={{ fontSize: "0.75rem", color: "#9ca3af", marginTop: "0.25rem" }}>
+                (includes family members)
               </div>
             </div>
 
@@ -406,22 +427,7 @@ export default function EventManagementPage({ eventId, onBack, currentUser }) {
                 {stats.totalPending}
               </div>
               <div style={{ fontSize: "0.875rem", color: "#6b7280", fontWeight: "500" }}>
-                Pending
-              </div>
-            </div>
-
-            <div style={{
-              backgroundColor: "#fdf2f8",
-              padding: "1.25rem",
-              borderRadius: "0.5rem",
-              textAlign: "center",
-              border: "1px solid #ec4899"
-            }}>
-              <div style={{ fontSize: "2rem", fontWeight: "bold", color: "#ec4899" }}>
-                {stats.totalFamilyMembers}
-              </div>
-              <div style={{ fontSize: "0.875rem", color: "#6b7280", fontWeight: "500" }}>
-                Family Members
+                Pending Check-ins
               </div>
             </div>
           </div>
@@ -507,7 +513,7 @@ export default function EventManagementPage({ eventId, onBack, currentUser }) {
             alignItems: "center",
             gap: "0.5rem"
           }}>
-            ✅ Checked-In Participants ({checkedInParticipants.length})
+            ✅ Checked-In Participants ({stats.checkedInUsers} users{stats.totalFamilyMembers > 0 ? ` + ${stats.totalFamilyMembers} family = ${stats.totalCheckedIn} total` : ``})
           </h2>
 
           {loading ? (
