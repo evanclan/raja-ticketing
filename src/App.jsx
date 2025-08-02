@@ -4,14 +4,27 @@ import ConnectionTest from "./components/ConnectionTest";
 import AuthContainer from "./components/Auth/AuthContainer";
 import AdminDashboard from "./components/Admin/AdminDashboard";
 import UserDashboard from "./components/User/UserDashboard";
+import EventManagementPage from "./components/Admin/EventManagementPage";
 
 function App() {
   const [showAuth, setShowAuth] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [currentView, setCurrentView] = useState("dashboard"); // "dashboard" | "event-management"
+  const [selectedEventId, setSelectedEventId] = useState(null);
 
   const handleAuthSuccess = (user) => {
     setCurrentUser(user);
     setShowAuth(false);
+  };
+
+  const handleNavigateToEventManagement = (eventId) => {
+    setSelectedEventId(eventId);
+    setCurrentView("event-management");
+  };
+
+  const handleBackToDashboard = () => {
+    setCurrentView("dashboard");
+    setSelectedEventId(null);
   };
 
   return (
@@ -106,9 +119,20 @@ function App() {
               </div>
             </div>
 
-            {/* Show Admin Dashboard only for admins */}
+            {/* Show appropriate view based on currentView state */}
             {currentUser.user_metadata?.role === "admin" ? (
-              <AdminDashboard user={currentUser} />
+              currentView === "event-management" ? (
+                <EventManagementPage 
+                  eventId={selectedEventId}
+                  onBack={handleBackToDashboard}
+                  currentUser={currentUser}
+                />
+              ) : (
+                <AdminDashboard 
+                  user={currentUser} 
+                  onNavigateToEventManagement={handleNavigateToEventManagement}
+                />
+              )
             ) : (
               <UserDashboard user={currentUser} />
             )}

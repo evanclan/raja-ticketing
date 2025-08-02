@@ -29,14 +29,14 @@ export default function EventManagement({ event, isOpen, onClose }) {
 
       // Calculate stats
       const total = registrations.length;
-      const checkedIn = registrations.filter(r => r.checked_in_at).length;
+      const checkedIn = registrations.filter((r) => r.checked_in_at).length;
       const pending = total - checkedIn;
 
       setStats({ total, checkedIn, pending });
 
       // Get checked-in participants with user details
-      const checkedInRegs = registrations.filter(r => r.checked_in_at);
-      
+      const checkedInRegs = registrations.filter((r) => r.checked_in_at);
+
       if (checkedInRegs.length > 0) {
         // Get user details and family members for checked-in participants
         const participantsWithDetails = await Promise.all(
@@ -52,12 +52,15 @@ export default function EventManagement({ event, isOpen, onClose }) {
 
               if (userError || !userData) {
                 // Fallback to auth.users
-                const { data: authUser } = await supabase.auth.admin.getUserById(reg.user_id);
+                const { data: authUser } =
+                  await supabase.auth.admin.getUserById(reg.user_id);
                 userInfo = {
-                  email: authUser?.user?.email || 'Unknown',
-                  full_name: authUser?.user?.user_metadata?.full_name || 
-                            authUser?.user?.raw_user_meta_data?.full_name || 
-                            authUser?.user?.email || 'Unknown'
+                  email: authUser?.user?.email || "Unknown",
+                  full_name:
+                    authUser?.user?.user_metadata?.full_name ||
+                    authUser?.user?.raw_user_meta_data?.full_name ||
+                    authUser?.user?.email ||
+                    "Unknown",
                 };
               } else {
                 userInfo = userData;
@@ -74,15 +77,15 @@ export default function EventManagement({ event, isOpen, onClose }) {
                 ...reg,
                 user: userInfo,
                 familyMembers: familyMembers || [],
-                checkedInTime: new Date(reg.checked_in_at).toLocaleString()
+                checkedInTime: new Date(reg.checked_in_at).toLocaleString(),
               };
             } catch (err) {
               console.error("Error fetching participant details:", err);
               return {
                 ...reg,
-                user: { email: 'Error loading', full_name: 'Error loading' },
+                user: { email: "Error loading", full_name: "Error loading" },
                 familyMembers: [],
-                checkedInTime: new Date(reg.checked_in_at).toLocaleString()
+                checkedInTime: new Date(reg.checked_in_at).toLocaleString(),
               };
             }
           })
@@ -92,7 +95,6 @@ export default function EventManagement({ event, isOpen, onClose }) {
       } else {
         setCheckedInParticipants([]);
       }
-
     } catch (err) {
       setError("Failed to load event data: " + err.message);
       console.error("Event data fetch error:", err);
@@ -110,7 +112,7 @@ export default function EventManagement({ event, isOpen, onClose }) {
   const handleScannerClose = () => {
     setScannerOpen(false);
     // Refresh data after scanner closes (in case someone was checked in)
-    setRefreshTrigger(prev => prev + 1);
+    setRefreshTrigger((prev) => prev + 1);
   };
 
   const formatDateTime = (date, time) => {
@@ -122,7 +124,7 @@ export default function EventManagement({ event, isOpen, onClose }) {
       day: "numeric",
       hour: "numeric",
       minute: "2-digit",
-      hour12: true
+      hour12: true,
     });
   };
 
@@ -141,7 +143,7 @@ export default function EventManagement({ event, isOpen, onClose }) {
         alignItems: "center",
         justifyContent: "center",
         zIndex: 1000,
-        padding: "1rem"
+        padding: "1rem",
       }}
     >
       <div
@@ -153,31 +155,44 @@ export default function EventManagement({ event, isOpen, onClose }) {
           maxHeight: "90vh",
           overflow: "hidden",
           display: "flex",
-          flexDirection: "column"
+          flexDirection: "column",
         }}
       >
         {/* Header */}
-        <div style={{ 
-          padding: "1.5rem", 
-          borderBottom: "1px solid #e5e7eb",
-          backgroundColor: "#f9fafb"
-        }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+        <div
+          style={{
+            padding: "1.5rem",
+            borderBottom: "1px solid #e5e7eb",
+            backgroundColor: "#f9fafb",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "flex-start",
+            }}
+          >
             <div>
-              <h2 style={{ 
-                fontSize: "1.5rem", 
-                fontWeight: "bold", 
-                color: "#1f2937",
-                margin: "0 0 0.5rem 0" 
-              }}>
+              <h2
+                style={{
+                  fontSize: "1.5rem",
+                  fontWeight: "bold",
+                  color: "#1f2937",
+                  margin: "0 0 0.5rem 0",
+                }}
+              >
                 🎉 {event?.title}
               </h2>
-              <p style={{ 
-                color: "#6b7280", 
-                fontSize: "0.875rem",
-                margin: "0"
-              }}>
-                📅 {formatDateTime(event?.event_date, event?.event_time)} | 📍 {event?.location}
+              <p
+                style={{
+                  color: "#6b7280",
+                  fontSize: "0.875rem",
+                  margin: "0",
+                }}
+              >
+                📅 {formatDateTime(event?.event_date, event?.event_time)} | 📍{" "}
+                {event?.location}
               </p>
             </div>
             <button
@@ -190,7 +205,7 @@ export default function EventManagement({ event, isOpen, onClose }) {
                 borderRadius: "0.375rem",
                 fontSize: "1.5rem",
                 cursor: "pointer",
-                lineHeight: 1
+                lineHeight: 1,
               }}
             >
               ✕
@@ -198,48 +213,74 @@ export default function EventManagement({ event, isOpen, onClose }) {
           </div>
 
           {/* Stats Cards */}
-          <div style={{ 
-            display: "grid", 
-            gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", 
-            gap: "1rem",
-            marginTop: "1rem"
-          }}>
-            <div style={{
-              backgroundColor: "white",
-              padding: "1rem",
-              borderRadius: "0.5rem",
-              textAlign: "center",
-              border: "1px solid #e5e7eb"
-            }}>
-              <div style={{ fontSize: "1.5rem", fontWeight: "bold", color: "#3b82f6" }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+              gap: "1rem",
+              marginTop: "1rem",
+            }}
+          >
+            <div
+              style={{
+                backgroundColor: "white",
+                padding: "1rem",
+                borderRadius: "0.5rem",
+                textAlign: "center",
+                border: "1px solid #e5e7eb",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: "1.5rem",
+                  fontWeight: "bold",
+                  color: "#3b82f6",
+                }}
+              >
                 {stats.total}
               </div>
               <div style={{ fontSize: "0.875rem", color: "#6b7280" }}>
                 Total Registered
               </div>
             </div>
-            <div style={{
-              backgroundColor: "white",
-              padding: "1rem",
-              borderRadius: "0.5rem",
-              textAlign: "center",
-              border: "1px solid #e5e7eb"
-            }}>
-              <div style={{ fontSize: "1.5rem", fontWeight: "bold", color: "#10b981" }}>
+            <div
+              style={{
+                backgroundColor: "white",
+                padding: "1rem",
+                borderRadius: "0.5rem",
+                textAlign: "center",
+                border: "1px solid #e5e7eb",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: "1.5rem",
+                  fontWeight: "bold",
+                  color: "#10b981",
+                }}
+              >
                 {stats.checkedIn}
               </div>
               <div style={{ fontSize: "0.875rem", color: "#6b7280" }}>
                 Checked In
               </div>
             </div>
-            <div style={{
-              backgroundColor: "white",
-              padding: "1rem",
-              borderRadius: "0.5rem",
-              textAlign: "center",
-              border: "1px solid #e5e7eb"
-            }}>
-              <div style={{ fontSize: "1.5rem", fontWeight: "bold", color: "#f59e0b" }}>
+            <div
+              style={{
+                backgroundColor: "white",
+                padding: "1rem",
+                borderRadius: "0.5rem",
+                textAlign: "center",
+                border: "1px solid #e5e7eb",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: "1.5rem",
+                  fontWeight: "bold",
+                  color: "#f59e0b",
+                }}
+              >
                 {stats.pending}
               </div>
               <div style={{ fontSize: "0.875rem", color: "#6b7280" }}>
@@ -249,12 +290,14 @@ export default function EventManagement({ event, isOpen, onClose }) {
           </div>
 
           {/* Action Buttons */}
-          <div style={{ 
-            display: "flex", 
-            gap: "1rem", 
-            marginTop: "1rem",
-            justifyContent: "center"
-          }}>
+          <div
+            style={{
+              display: "flex",
+              gap: "1rem",
+              marginTop: "1rem",
+              justifyContent: "center",
+            }}
+          >
             <button
               onClick={() => setScannerOpen(true)}
               style={{
@@ -269,13 +312,13 @@ export default function EventManagement({ event, isOpen, onClose }) {
                 display: "flex",
                 alignItems: "center",
                 gap: "0.5rem",
-                transition: "background-color 0.2s"
+                transition: "background-color 0.2s",
               }}
             >
               📱 Open QR Scanner
             </button>
             <button
-              onClick={() => setRefreshTrigger(prev => prev + 1)}
+              onClick={() => setRefreshTrigger((prev) => prev + 1)}
               disabled={loading}
               style={{
                 padding: "0.75rem 1.5rem",
@@ -289,7 +332,7 @@ export default function EventManagement({ event, isOpen, onClose }) {
                 display: "flex",
                 alignItems: "center",
                 gap: "0.5rem",
-                opacity: loading ? 0.6 : 1
+                opacity: loading ? 0.6 : 1,
               }}
             >
               🔄 Refresh Data
@@ -300,49 +343,63 @@ export default function EventManagement({ event, isOpen, onClose }) {
         {/* Content */}
         <div style={{ flex: 1, overflow: "auto", padding: "1.5rem" }}>
           {error && (
-            <div style={{
-              padding: "1rem",
-              backgroundColor: "#fef2f2",
-              border: "1px solid #fecaca",
-              borderRadius: "0.5rem",
-              color: "#dc2626",
-              marginBottom: "1rem"
-            }}>
+            <div
+              style={{
+                padding: "1rem",
+                backgroundColor: "#fef2f2",
+                border: "1px solid #fecaca",
+                borderRadius: "0.5rem",
+                color: "#dc2626",
+                marginBottom: "1rem",
+              }}
+            >
               {error}
             </div>
           )}
 
-          <h3 style={{ 
-            fontSize: "1.25rem", 
-            fontWeight: "bold", 
-            color: "#1f2937",
-            marginBottom: "1rem",
-            display: "flex",
-            alignItems: "center",
-            gap: "0.5rem"
-          }}>
+          <h3
+            style={{
+              fontSize: "1.25rem",
+              fontWeight: "bold",
+              color: "#1f2937",
+              marginBottom: "1rem",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+            }}
+          >
             ✅ Checked-In Participants ({checkedInParticipants.length})
           </h3>
 
           {loading ? (
-            <div style={{ 
-              textAlign: "center", 
-              padding: "3rem", 
-              color: "#6b7280" 
-            }}>
+            <div
+              style={{
+                textAlign: "center",
+                padding: "3rem",
+                color: "#6b7280",
+              }}
+            >
               Loading participants...
             </div>
           ) : checkedInParticipants.length === 0 ? (
-            <div style={{ 
-              textAlign: "center", 
-              padding: "3rem", 
-              color: "#6b7280",
-              backgroundColor: "#f9fafb",
-              borderRadius: "0.5rem",
-              border: "2px dashed #d1d5db"
-            }}>
+            <div
+              style={{
+                textAlign: "center",
+                padding: "3rem",
+                color: "#6b7280",
+                backgroundColor: "#f9fafb",
+                borderRadius: "0.5rem",
+                border: "2px dashed #d1d5db",
+              }}
+            >
               <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>📱</div>
-              <div style={{ fontSize: "1.125rem", fontWeight: "500", marginBottom: "0.5rem" }}>
+              <div
+                style={{
+                  fontSize: "1.125rem",
+                  fontWeight: "500",
+                  marginBottom: "0.5rem",
+                }}
+              >
                 No participants checked in yet
               </div>
               <div style={{ fontSize: "0.875rem" }}>
@@ -350,11 +407,13 @@ export default function EventManagement({ event, isOpen, onClose }) {
               </div>
             </div>
           ) : (
-            <div style={{ 
-              display: "grid", 
-              gap: "1rem",
-              gridTemplateColumns: "repeat(auto-fill, minmax(350px, 1fr))"
-            }}>
+            <div
+              style={{
+                display: "grid",
+                gap: "1rem",
+                gridTemplateColumns: "repeat(auto-fill, minmax(350px, 1fr))",
+              }}
+            >
               {checkedInParticipants.map((participant) => (
                 <div
                   key={participant.id}
@@ -362,76 +421,90 @@ export default function EventManagement({ event, isOpen, onClose }) {
                     backgroundColor: "#f8fafc",
                     border: "1px solid #e2e8f0",
                     borderRadius: "0.5rem",
-                    padding: "1rem"
+                    padding: "1rem",
                   }}
                 >
-                  <div style={{ 
-                    display: "flex", 
-                    justifyContent: "space-between", 
-                    alignItems: "flex-start",
-                    marginBottom: "0.75rem"
-                  }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "flex-start",
+                      marginBottom: "0.75rem",
+                    }}
+                  >
                     <div>
-                      <div style={{ 
-                        fontWeight: "600", 
-                        color: "#1f2937",
-                        fontSize: "1rem"
-                      }}>
+                      <div
+                        style={{
+                          fontWeight: "600",
+                          color: "#1f2937",
+                          fontSize: "1rem",
+                        }}
+                      >
                         {participant.user.full_name}
                       </div>
-                      <div style={{ 
-                        color: "#6b7280", 
-                        fontSize: "0.875rem" 
-                      }}>
+                      <div
+                        style={{
+                          color: "#6b7280",
+                          fontSize: "0.875rem",
+                        }}
+                      >
                         {participant.user.email}
                       </div>
                     </div>
-                    <div style={{
-                      backgroundColor: "#10b981",
-                      color: "white",
-                      padding: "0.25rem 0.5rem",
-                      borderRadius: "0.25rem",
-                      fontSize: "0.75rem",
-                      fontWeight: "500"
-                    }}>
+                    <div
+                      style={{
+                        backgroundColor: "#10b981",
+                        color: "white",
+                        padding: "0.25rem 0.5rem",
+                        borderRadius: "0.25rem",
+                        fontSize: "0.75rem",
+                        fontWeight: "500",
+                      }}
+                    >
                       ✓ Checked In
                     </div>
                   </div>
 
-                  <div style={{ 
-                    fontSize: "0.75rem", 
-                    color: "#6b7280",
-                    marginBottom: "0.5rem"
-                  }}>
+                  <div
+                    style={{
+                      fontSize: "0.75rem",
+                      color: "#6b7280",
+                      marginBottom: "0.5rem",
+                    }}
+                  >
                     🕐 {participant.checkedInTime}
                   </div>
 
                   {participant.familyMembers.length > 0 && (
-                    <div style={{ 
-                      marginTop: "0.75rem",
-                      padding: "0.75rem",
-                      backgroundColor: "white",
-                      borderRadius: "0.375rem",
-                      border: "1px solid #e5e7eb"
-                    }}>
-                      <div style={{ 
-                        fontSize: "0.875rem", 
-                        fontWeight: "500", 
-                        color: "#374151",
-                        marginBottom: "0.5rem"
-                      }}>
+                    <div
+                      style={{
+                        marginTop: "0.75rem",
+                        padding: "0.75rem",
+                        backgroundColor: "white",
+                        borderRadius: "0.375rem",
+                        border: "1px solid #e5e7eb",
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: "0.875rem",
+                          fontWeight: "500",
+                          color: "#374151",
+                          marginBottom: "0.5rem",
+                        }}
+                      >
                         👨‍👩‍👧‍👦 Family Members ({participant.familyMembers.length}):
                       </div>
                       {participant.familyMembers.map((family, idx) => (
-                        <div 
+                        <div
                           key={idx}
-                          style={{ 
-                            fontSize: "0.75rem", 
+                          style={{
+                            fontSize: "0.75rem",
                             color: "#6b7280",
-                            marginBottom: "0.25rem"
+                            marginBottom: "0.25rem",
                           }}
                         >
-                          • {family.full_name} 
+                          • {family.full_name}
                           {family.age && ` (${family.age})`}
                           {family.relationship && ` - ${family.relationship}`}
                         </div>

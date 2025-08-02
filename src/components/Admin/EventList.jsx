@@ -2,9 +2,8 @@ import { useState } from "react";
 import { supabase } from "../../lib/supabase";
 import ParticipantsModal from "./ParticipantsModal";
 import QRScanner from "./QRScanner";
-import EventManagement from "./EventManagement";
 
-export default function EventList({ events, onEventDeleted, onEventUpdated }) {
+export default function EventList({ events, onEventDeleted, onEventUpdated, onNavigateToEventManagement }) {
   const [editingEvent, setEditingEvent] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -18,9 +17,7 @@ export default function EventList({ events, onEventDeleted, onEventUpdated }) {
   const [scannerOpen, setScannerOpen] = useState(false);
   const [selectedEventForScanner, setSelectedEventForScanner] = useState(null);
 
-  // Event Management state
-  const [eventManagementOpen, setEventManagementOpen] = useState(false);
-  const [selectedEventForManagement, setSelectedEventForManagement] = useState(null);
+
 
   const handleDelete = async (eventId) => {
     if (!confirm("Are you sure you want to delete this event?")) {
@@ -97,14 +94,10 @@ export default function EventList({ events, onEventDeleted, onEventUpdated }) {
 
   // Event Management handlers
   const handleStartEvent = (event) => {
-    setSelectedEventForManagement(event);
-    setEventManagementOpen(true);
+    onNavigateToEventManagement(event.id);
   };
 
-  const handleCloseEventManagement = () => {
-    setEventManagementOpen(false);
-    setSelectedEventForManagement(null);
-  };
+
 
   const formatDate = (dateString, timeString) => {
     const date = new Date(dateString + "T" + timeString);
@@ -445,12 +438,7 @@ export default function EventList({ events, onEventDeleted, onEventUpdated }) {
         onClose={handleCloseScanner}
       />
 
-      {/* Event Management Modal */}
-      <EventManagement
-        event={selectedEventForManagement}
-        isOpen={eventManagementOpen}
-        onClose={handleCloseEventManagement}
-      />
+
     </div>
   );
 }

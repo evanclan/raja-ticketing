@@ -3,7 +3,7 @@ import { supabase } from "../../lib/supabase";
 import CreateEventForm from "./CreateEventForm";
 import EventList from "./EventList";
 
-export default function AdminDashboard() {
+export default function AdminDashboard({ user, onNavigateToEventManagement }) {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -256,6 +256,7 @@ export default function AdminDashboard() {
         events={events}
         onEventDeleted={handleEventDeleted}
         onEventUpdated={handleEventUpdated}
+        onNavigateToEventManagement={onNavigateToEventManagement}
       />
     </div>
   );

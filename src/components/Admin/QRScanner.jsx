@@ -249,17 +249,49 @@ export default function QRScanner({ eventId, isOpen, onClose }) {
       // Get current admin user for check-in tracking
       const { data: { user: currentUser } } = await supabase.auth.getUser();
       
-      const { error: updateError } = await supabase
-        .from("registrations")
-        .update({
-          checked_in_at: new Date().toISOString(),
-          checked_in_by: currentUser?.id || null,
-        })
-        .eq("id", checkInResult.registrationId);
+      // Create check-in record in the new table
+      const checkInData = {
+        event_id: eventId,
+        user_id: checkInResult.userId,
+        registration_id: checkInResult.registrationId,
+        checked_in_at: new Date().toISOString(),
+        checked_in_by: currentUser?.id || null,
+        check_in_method: 'qr_scanner',
+        participant_name: checkInResult.participant?.full_name || checkInResult.participant?.email || 'Unknown',
+        participant_email: checkInResult.participant?.email || 'Unknown',
+        family_members_count: checkInResult.familyMembers?.length || 0,
+        status: 'active'
+      };
 
-      if (updateError) {
-        setError("Check-in failed: " + updateError.message);
-        return;
+      const { error: checkInError } = await supabase
+        .from("event_checkins")
+        .insert([checkInData]);
+
+      if (checkInError) {
+        console.warn("New check-ins table not available, using legacy method:", checkInError.message);
+        
+        // Fallback to old method if new table doesn't exist
+        const { error: updateError } = await supabase
+          .from("registrations")
+          .update({
+            checked_in_at: new Date().toISOString(),
+            checked_in_by: currentUser?.id || null,
+          })
+          .eq("id", checkInResult.registrationId);
+
+        if (updateError) {
+          setError("Check-in failed: " + updateError.message);
+          return;
+        }
+      } else {
+        // Also update the registrations table for backward compatibility
+        await supabase
+          .from("registrations")
+          .update({
+            checked_in_at: new Date().toISOString(),
+            checked_in_by: currentUser?.id || null,
+          })
+          .eq("id", checkInResult.registrationId);
       }
 
       // Update result to show success
