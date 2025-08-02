@@ -194,6 +194,74 @@ export default function QRScanner({ eventId, isOpen, onClose }) {
     [eventId, lastResult]
   );
 
+  const populateEventParticipants = async () => {
+    try {
+      const now = new Date().toISOString();
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      
+      // Get user details
+      const userInfo = checkInResult.participant;
+      const familyMembers = checkInResult.familyMembers || [];
+      
+      // Prepare participants data
+      const participantsToInsert = [];
+      
+      // Add the registered user
+      participantsToInsert.push({
+        event_id: eventId,
+        user_id: checkInResult.userId,
+        registration_id: checkInResult.registrationId,
+        full_name: userInfo.full_name || userInfo.email || 'Unknown',
+        email: userInfo.email,
+        age: null, // Age not typically stored for registered users
+        participant_type: 'registered_user',
+        relationship_to_user: null,
+        primary_participant_name: null,
+        checked_in_at: now,
+        checked_in_by: currentUser?.id || null,
+        check_in_method: 'qr_scanner'
+      });
+      
+      // Add family members
+      familyMembers.forEach(family => {
+        participantsToInsert.push({
+          event_id: eventId,
+          user_id: null, // Family members don't have user accounts
+          registration_id: checkInResult.registrationId,
+          full_name: family.full_name,
+          email: null, // Family members typically don't have separate emails
+          age: family.age,
+          participant_type: 'family_member',
+          relationship_to_user: family.relationship,
+          primary_participant_name: userInfo.full_name || userInfo.email || 'Unknown',
+          checked_in_at: now,
+          checked_in_by: currentUser?.id || null,
+          check_in_method: 'qr_scanner',
+          notes: family.notes
+        });
+      });
+      
+      // Insert all participants (ignore conflicts in case of duplicate check-ins)
+      const { error: participantError } = await supabase
+        .from("event_participants")
+        .upsert(participantsToInsert, { 
+          onConflict: 'event_id,registration_id,full_name',
+          ignoreDuplicates: false 
+        });
+      
+      if (participantError) {
+        console.warn("Event participants table not available:", participantError.message);
+        // Don't fail the check-in process if this table doesn't exist
+      } else {
+        console.log(`✅ Added ${participantsToInsert.length} participants to event roster`);
+      }
+      
+    } catch (err) {
+      console.warn("Failed to populate event participants:", err.message);
+      // Don't fail the check-in process
+    }
+  };
+
   const startScanner = useCallback(async () => {
     try {
       setError("");
@@ -293,6 +361,9 @@ export default function QRScanner({ eventId, isOpen, onClose }) {
           })
           .eq("id", checkInResult.registrationId);
       }
+
+      // Populate the comprehensive event_participants table
+      await populateEventParticipants();
 
       // Update result to show success
       setCheckInResult({
