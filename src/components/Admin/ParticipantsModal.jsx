@@ -18,27 +18,82 @@ export default function ParticipantsModal({ event, isOpen, onClose }) {
     setParticipants([]);
 
     try {
-      // Use Supabase client directly to get participants
-      const { data, error } = await supabase
+      console.log("Fetching participants for event:", event.id); // Debug log
+      
+      // First, get all approved registrations for this event
+      const { data: registrations, error: regError } = await supabase
         .from("registrations")
-        .select(
-          `
-          user_id,
-          created_at,
-          status,
-          users!inner(email, full_name)
-        `
-        )
+        .select("user_id, created_at, status")
         .eq("event_id", event.id)
         .eq("status", "approved");
 
-      if (error) {
-        throw new Error(error.message);
+      if (regError) {
+        throw new Error(regError.message);
       }
+
+      console.log("Found registrations:", registrations); // Debug log
+
+      if (!registrations || registrations.length === 0) {
+        setParticipants([]);
+        return;
+      }
+
+      // Get user details separately to avoid join issues
+      const userIds = registrations.map(reg => reg.user_id);
+      const { data: usersData, error: usersError } = await supabase
+        .from("users")
+        .select("id, email, full_name")
+        .in("id", userIds);
+
+      if (usersError) {
+        console.warn("Could not fetch from users table, trying auth.users:", usersError);
+        // Fallback: get user info from auth metadata
+        const participantsWithUserInfo = await Promise.all(
+          registrations.map(async (reg) => {
+            const { data: authUser } = await supabase.auth.admin.getUserById(reg.user_id);
+            return {
+              ...reg,
+              users: {
+                email: authUser?.user?.email || 'Unknown',
+                full_name: authUser?.user?.user_metadata?.full_name || authUser?.user?.email || 'Unknown'
+              }
+            };
+          })
+        );
+        
+        // Get family member counts
+        const participantsWithFamily = await Promise.all(
+          participantsWithUserInfo.map(async (participant) => {
+            const { data: familyMembers } = await supabase
+              .from("family_members")
+              .select("id")
+              .eq("user_id", participant.user_id);
+
+            return {
+              ...participant,
+              familyMemberCount: familyMembers ? familyMembers.length : 0,
+            };
+          })
+        );
+
+        setParticipants(participantsWithFamily);
+        return;
+      }
+
+      console.log("Found users:", usersData); // Debug log
+
+      // Combine registration and user data
+      const participantsWithUserInfo = registrations.map(reg => {
+        const user = usersData.find(u => u.id === reg.user_id);
+        return {
+          ...reg,
+          users: user || { email: 'Unknown', full_name: 'Unknown' }
+        };
+      });
 
       // Get family member counts for each participant
       const participantsWithFamily = await Promise.all(
-        (data || []).map(async (participant) => {
+        participantsWithUserInfo.map(async (participant) => {
           const { data: familyMembers } = await supabase
             .from("family_members")
             .select("id")
@@ -51,6 +106,7 @@ export default function ParticipantsModal({ event, isOpen, onClose }) {
         })
       );
 
+      console.log("Final participants with family:", participantsWithFamily); // Debug log
       setParticipants(participantsWithFamily);
     } catch (err) {
       setError(err.message);

@@ -39,15 +39,75 @@ export default function AdminDashboard() {
     setPendingLoading(true);
     setPendingError("");
     try {
-      const { data, error } = await supabase
+      console.log("Fetching pending registrations..."); // Debug log
+      
+      // Get all registrations with status details
+      const { data: allRegs, error: allError } = await supabase
         .from("registrations")
-        .select(
-          "id, user_id, event_id, status, users:user_id(email), events:event_id(title)"
-        )
+        .select("id, user_id, event_id, status")
+        .order("created_at", { ascending: false });
+      
+      console.log("All registrations:", allRegs); // Debug log
+      
+      // Get pending registrations with user and event details separately
+      const { data: pendingRegs, error } = await supabase
+        .from("registrations")
+        .select("id, user_id, event_id, status")
         .eq("status", "pending");
+      
       if (error) throw error;
-      setPendingRegs(data || []);
+      
+      console.log("Pending registrations:", pendingRegs); // Debug log
+      
+      if (!pendingRegs || pendingRegs.length === 0) {
+        setPendingRegs([]);
+        return;
+      }
+
+      // Get user and event details separately to avoid join issues
+      const userIds = [...new Set(pendingRegs.map(reg => reg.user_id))];
+      const eventIds = [...new Set(pendingRegs.map(reg => reg.event_id))];
+
+      const [
+        { data: usersData, error: usersError },
+        { data: eventsData, error: eventsError }
+      ] = await Promise.all([
+        supabase.from("users").select("id, email").in("id", userIds),
+        supabase.from("events").select("id, title").in("id", eventIds)
+      ]);
+
+      console.log("Users data:", usersData, "Events data:", eventsData); // Debug log
+
+      // If users table doesn't exist or has issues, try auth.users
+      let finalUsersData = usersData;
+      if (usersError || !usersData || usersData.length === 0) {
+        console.warn("Users table issue, trying auth approach:", usersError);
+        finalUsersData = await Promise.all(
+          userIds.map(async (userId) => {
+            const { data: authUser } = await supabase.auth.admin.getUserById(userId);
+            return {
+              id: userId,
+              email: authUser?.user?.email || 'Unknown'
+            };
+          })
+        );
+      }
+
+      // Combine the data
+      const pendingWithDetails = pendingRegs.map(reg => {
+        const user = finalUsersData?.find(u => u.id === reg.user_id);
+        const event = eventsData?.find(e => e.id === reg.event_id);
+        return {
+          ...reg,
+          users: user || { email: 'Unknown' },
+          events: event || { title: 'Unknown Event' }
+        };
+      });
+
+      console.log("Final pending registrations:", pendingWithDetails); // Debug log
+      setPendingRegs(pendingWithDetails);
     } catch (err) {
+      console.error("Error fetching pending registrations:", err); // Debug log
       setPendingError("Failed to fetch pending registrations: " + err.message);
     } finally {
       setPendingLoading(false);
@@ -55,13 +115,18 @@ export default function AdminDashboard() {
   };
 
   const handleApprove = async (regId) => {
+    console.log("Approving registration:", regId); // Debug log
     const { error } = await supabase
       .from("registrations")
       .update({ status: "approved" })
       .eq("id", regId);
 
-    if (!error) {
-      fetchPendingRegs();
+    if (error) {
+      console.error("Error approving registration:", error); // Debug log
+    } else {
+      console.log("Registration approved successfully"); // Debug log
+      fetchPendingRegs(); // Refresh pending list
+      // Note: Participants modal should refresh when opened again
     }
   };
 
