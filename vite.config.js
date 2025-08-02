@@ -7,4 +7,10 @@ export default defineConfig({
   server: {
     host: true, // Allow external connections
   },
+  base: "./", // Use relative paths for assets
+  build: {
+    outDir: "dist",
+    assetsDir: "assets",
+    sourcemap: false,
+  },
 });
