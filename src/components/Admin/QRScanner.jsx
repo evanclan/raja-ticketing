@@ -16,13 +16,13 @@ export default function QRScanner({ eventId, isOpen, onClose }) {
       // Get check-in stats directly from Supabase
       const { data, error } = await supabase
         .from("registrations")
-        .select("status, checked_in")
+        .select("status, checked_in_at")
         .eq("event_id", eventId);
 
       if (error) throw error;
 
       const total = data.length;
-      const checkedIn = data.filter((r) => r.checked_in).length;
+      const checkedIn = data.filter((r) => r.checked_in_at !== null).length;
       const pending = total - checkedIn;
 
       setStats({
@@ -90,7 +90,7 @@ export default function QRScanner({ eventId, isOpen, onClose }) {
         // Verify the participant is registered for this event
         const { data: registration, error: fetchError } = await supabase
           .from("registrations")
-          .select("id, status, checked_in, created_at")
+          .select("id, status, checked_in_at, created_at")
           .eq("event_id", qrEventId)
           .eq("user_id", userId)
           .eq("status", "approved")
@@ -136,7 +136,7 @@ export default function QRScanner({ eventId, isOpen, onClose }) {
         // Add user info to registration
         registration.users = userInfo;
 
-        if (registration.checked_in) {
+        if (registration.checked_in_at) {
           // Fetch family members for already checked in user too
           const { data: familyMembers } = await supabase
             .from("family_members")
@@ -252,7 +252,6 @@ export default function QRScanner({ eventId, isOpen, onClose }) {
       const { error: updateError } = await supabase
         .from("registrations")
         .update({
-          checked_in: true,
           checked_in_at: new Date().toISOString(),
           checked_in_by: currentUser?.id || null,
         })
