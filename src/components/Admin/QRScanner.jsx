@@ -54,7 +54,9 @@ export default function QRScanner({ eventId, isOpen, onClose }) {
         let qrCodeData;
         try {
           qrCodeData = JSON.parse(qrData);
+          console.log("🔍 QR Code Data:", qrCodeData);
         } catch {
+          console.log("❌ Failed to parse QR data:", qrData);
           setCheckInResult({
             success: false,
             message: "Invalid QR code format",
@@ -64,6 +66,7 @@ export default function QRScanner({ eventId, isOpen, onClose }) {
         }
 
         const { eventId: qrEventId, userId } = qrCodeData;
+        console.log("🎯 Scanning for Event ID:", qrEventId, "User ID:", userId);
 
         if (!qrEventId || !userId) {
           setCheckInResult({
@@ -94,6 +97,7 @@ export default function QRScanner({ eventId, isOpen, onClose }) {
           .single();
 
         if (fetchError || !registration) {
+          console.log("❌ Registration lookup failed:", fetchError?.message || "No registration found");
           setCheckInResult({
             success: false,
             message: "Participant not found",
@@ -101,6 +105,8 @@ export default function QRScanner({ eventId, isOpen, onClose }) {
           });
           return;
         }
+
+        console.log("✅ Found registration:", registration);
 
         // Get user details from auth since users table might not exist
         let userInfo;
