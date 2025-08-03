@@ -32,53 +32,51 @@ export default function SuperuserDashboard({ onSignOut }) {
     setLoadingAdmins(false);
   };
 
-  // Fetch registered users from users table with role 'user'
+  // Fetch registered users (non-admin users)
   const fetchUsers = async () => {
     setLoadingUsers(true);
     setAddError("");
 
     try {
-      // First, try to get users from the users table where role is 'user'
-      let { data: registeredUsers, error } = await supabase
-        .from("users")
-        .select("*")
-        .eq("role", "user")
-        .order("created_at", { ascending: false });
+      // Get all users from auth system
+      const { data: allUsers, error } = await supabase.rpc("get_all_users");
 
       if (error) {
-        console.error("Error fetching from users table:", error);
+        console.error("Error fetching users:", error);
         setAddError("Error fetching users: " + error.message);
         setLoadingUsers(false);
         return;
       }
 
-      console.log("Registered users from users table:", registeredUsers);
+      console.log("All users from auth:", allUsers);
 
-      // If no users found, try to get from auth.users as fallback
-      if (!registeredUsers || registeredUsers.length === 0) {
-        console.log("No users found in users table, trying auth.users...");
-
-        const { data: authUsers, error: authError } = await supabase.rpc("get_all_users");
-
-        if (authError) {
-          console.error("Error fetching from auth.users:", authError);
-          setAddError("Error fetching users: " + authError.message);
-        } else {
-          console.log("Auth users found:", authUsers);
-          // Transform auth users to match our expected format
-          const transformedUsers = authUsers.map(user => ({
-            id: user.id,
-            email: user.email,
-            full_name: user.email, // Use email as fallback for name
-            role: 'user',
-            created_at: user.created_at,
-            updated_at: user.created_at
-          }));
-          setUsers(transformedUsers);
-        }
-      } else {
-        setUsers(registeredUsers);
+      // Get admin users to exclude them
+      const { data: adminUsers, error: adminError } = await supabase.rpc("get_admins");
+      
+      if (adminError) {
+        console.error("Error fetching admins:", adminError);
       }
+
+      console.log("Admin users:", adminUsers);
+
+      // Filter out admins to get only regular users
+      const adminEmails = adminUsers?.map(admin => admin.email) || [];
+      const regularUsers = allUsers.filter(user => !adminEmails.includes(user.email));
+
+      console.log("Regular users (non-admin):", regularUsers);
+
+      // Transform to match expected format
+      const transformedUsers = regularUsers.map(user => ({
+        id: user.id,
+        email: user.email,
+        full_name: user.email, // Use email as fallback for name
+        role: 'user',
+        created_at: user.created_at,
+        updated_at: user.created_at
+      }));
+
+      setUsers(transformedUsers);
+
     } catch (error) {
       console.error("Error in fetchUsers:", error);
       setAddError("Error fetching users: " + error.message);
