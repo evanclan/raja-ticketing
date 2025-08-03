@@ -32,14 +32,16 @@ export default function SuperuserDashboard({ onSignOut }) {
     setLoadingAdmins(false);
   };
 
-  // Fetch only users with role "user" from auth system
+  // Working solution - get users from public.users table where role information is stored
   const fetchUsers = async () => {
     setLoadingUsers(true);
     setAddError("");
     
     try {
-      // Use the get_all_users function which pulls from auth.users
-      const { data: allUsers, error: allError } = await supabase.rpc("get_all_users");
+      // Get users from public.users table where role information is stored
+      const { data: allUsers, error: allError } = await supabase
+        .from("users")
+        .select("id, email, full_name, role, created_at");
       
       if (allError) {
         setAddError("Error fetching users: " + allError.message);
@@ -47,27 +49,15 @@ export default function SuperuserDashboard({ onSignOut }) {
         return;
       }
       
-      console.log("All users from auth system:", allUsers);
+      console.log("All users from public.users table:", allUsers);
       
-      // Log each user's role information
-      allUsers.forEach(user => {
-        console.log(`User ${user.email}:`, {
-          user_metadata: user.user_metadata,
-          raw_user_meta_data: user.raw_user_meta_data,
-          role: user.user_metadata?.role || user.raw_user_meta_data?.role || 'no role'
-        });
-      });
-      
-      // Filter to show users who are NOT admins (instead of requiring role "user")
-      const regularUsers = allUsers.filter(user => {
-        const userRole = user.user_metadata?.role || user.raw_user_meta_data?.role;
-        console.log(`Filtering ${user.email}: role = ${userRole}`);
-        return userRole !== "admin";
-      });
+      // Filter to show users who are NOT admins
+      const regularUsers = allUsers.filter(user => user.role !== "admin");
       
       console.log("Users who are not admins:", regularUsers);
       
       setUsers(regularUsers);
+      
     } catch (error) {
       setAddError("Error fetching users: " + error.message);
     } finally {
@@ -166,7 +156,7 @@ export default function SuperuserDashboard({ onSignOut }) {
     }
   };
 
-  // Simple user deletion - just remove from the list
+  // Delete user from public.users table
   const handleDeleteUser = async (userEmail) => {
     if (
       !window.confirm(`Are you sure you want to delete user: ${userEmail}?`)
@@ -179,13 +169,23 @@ export default function SuperuserDashboard({ onSignOut }) {
     setAddSuccess("");
 
     try {
-      // Remove user from the local state
-      const updatedUsers = users.filter(user => user.email !== userEmail);
-      setUsers(updatedUsers);
+      // Delete from public.users table
+      const { error: deleteUserError } = await supabase
+        .from("users")
+        .delete()
+        .eq("email", userEmail);
+
+      if (deleteUserError) {
+        setAddError("Failed to delete user: " + deleteUserError.message);
+        return;
+      }
+
+      setAddSuccess(`User ${userEmail} deleted successfully!`);
       
-      setAddSuccess(`User ${userEmail} removed from the list!`);
+      // Refresh the user list
+      fetchUsers();
     } catch (error) {
-      setAddError("Error removing user: " + error.message);
+      setAddError("Error deleting user: " + error.message);
     } finally {
       setDeleteLoading(false);
     }
