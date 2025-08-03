@@ -32,31 +32,26 @@ export default function SuperuserDashboard({ onSignOut }) {
     setLoadingAdmins(false);
   };
 
-  // Working solution - get users from public.users table where role information is stored
+  // Simple solution - get users with role 'user' from public.users table
   const fetchUsers = async () => {
     setLoadingUsers(true);
     setAddError("");
     
     try {
-      // Get users from public.users table where role information is stored
-      const { data: allUsers, error: allError } = await supabase
+      // Direct query to public.users table for users with role 'user'
+      const { data: users, error } = await supabase
         .from("users")
-        .select("id, email, full_name, role, created_at");
+        .select("id, email, full_name, role, created_at")
+        .eq("role", "user");
       
-      if (allError) {
-        setAddError("Error fetching users: " + allError.message);
+      if (error) {
+        setAddError("Error fetching users: " + error.message);
         setLoadingUsers(false);
         return;
       }
       
-      console.log("All users from public.users table:", allUsers);
-      
-      // Filter to show users who are NOT admins
-      const regularUsers = allUsers.filter(user => user.role !== "admin");
-      
-      console.log("Users who are not admins:", regularUsers);
-      
-      setUsers(regularUsers);
+      console.log("Users with role 'user':", users);
+      setUsers(users);
       
     } catch (error) {
       setAddError("Error fetching users: " + error.message);
@@ -156,7 +151,7 @@ export default function SuperuserDashboard({ onSignOut }) {
     }
   };
 
-  // Delete user from public.users table
+  // Simple user deletion
   const handleDeleteUser = async (userEmail) => {
     if (
       !window.confirm(`Are you sure you want to delete user: ${userEmail}?`)
@@ -169,14 +164,14 @@ export default function SuperuserDashboard({ onSignOut }) {
     setAddSuccess("");
 
     try {
-      // Delete from public.users table
-      const { error: deleteUserError } = await supabase
+      // Delete from users table
+      const { error } = await supabase
         .from("users")
         .delete()
         .eq("email", userEmail);
 
-      if (deleteUserError) {
-        setAddError("Failed to delete user: " + deleteUserError.message);
+      if (error) {
+        setAddError("Failed to delete user: " + error.message);
         return;
       }
 
