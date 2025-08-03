@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import QRCode from "qrcode";
 
 export default function ParticipantQRCode({ event, user, isOpen, onClose }) {
   const [qrCode, setQrCode] = useState(null);
@@ -24,7 +25,6 @@ export default function ParticipantQRCode({ event, user, isOpen, onClose }) {
         userName: user.full_name || user.email,
       });
 
-      const QRCode = (await import("qrcode")).default;
       const qrCodeDataURL = await QRCode.toDataURL(qrData, {
         width: 256,
         margin: 2,
