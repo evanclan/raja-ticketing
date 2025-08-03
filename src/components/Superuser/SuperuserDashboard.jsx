@@ -155,29 +155,6 @@ export default function SuperuserDashboard({ onSignOut }) {
 
       // Delete from all related tables first (due to foreign key constraints)
 
-      // Delete from event_checkins table
-      const { error: checkinsError } = await supabase
-        .from("event_checkins")
-        .delete()
-        .eq("user_id", adminId);
-
-      if (checkinsError) {
-        console.log("Could not delete from event_checkins:", checkinsError);
-      }
-
-      // Delete from event_participants table
-      const { error: participantsError } = await supabase
-        .from("event_participants")
-        .delete()
-        .eq("user_id", adminId);
-
-      if (participantsError) {
-        console.log(
-          "Could not delete from event_participants:",
-          participantsError
-        );
-      }
-
       // Delete from registrations table
       const { error: registrationsError } = await supabase
         .from("registrations")
@@ -246,29 +223,6 @@ export default function SuperuserDashboard({ onSignOut }) {
       }
 
       // Delete from all related tables first (due to foreign key constraints)
-
-      // Delete from event_checkins table
-      const { error: checkinsError } = await supabase
-        .from("event_checkins")
-        .delete()
-        .eq("user_id", userId);
-
-      if (checkinsError) {
-        console.log("Could not delete from event_checkins:", checkinsError);
-      }
-
-      // Delete from event_participants table
-      const { error: participantsError } = await supabase
-        .from("event_participants")
-        .delete()
-        .eq("user_id", userId);
-
-      if (participantsError) {
-        console.log(
-          "Could not delete from event_participants:",
-          participantsError
-        );
-      }
 
       // Delete from registrations table
       const { error: registrationsError } = await supabase

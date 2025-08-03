@@ -36,3 +36,6 @@ dist-ssr
 *.p12
 *.pfx
 .vercel
+
+# Local Netlify folder
+.netlify
