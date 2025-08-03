@@ -207,18 +207,25 @@ export default function SuperuserDashboard({ onSignOut }) {
         console.log("Could not delete from family_members:", familyError);
       }
 
-      // Delete from users table
+      // Delete from users table (if it exists)
       const { error: userError } = await supabase
         .from("users")
         .delete()
         .eq("id", userId);
 
       if (userError) {
-        setAddError("Error deleting user: " + userError.message);
+        console.log("Could not delete from users table:", userError);
+      }
+
+      // Delete from auth system (this is the main deletion)
+      const { error: authError } = await supabase.auth.admin.deleteUser(userId);
+
+      if (authError) {
+        setAddError("Error deleting user from auth system: " + authError.message);
       } else {
         // Remove from local state
         setUsers(users.filter((user) => user.id !== userId));
-        setAddSuccess("User deleted successfully!");
+        setAddSuccess("User deleted successfully from database!");
       }
     } catch (error) {
       setAddError("Error deleting user: " + error.message);
