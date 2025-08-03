@@ -53,6 +53,7 @@ export default function SuperuserDashboard({ onSignOut }) {
 
       // If we have users from the table, use them
       if (usersFromTable && usersFromTable.length > 0) {
+        console.log("Using users from users table with actual roles:", usersFromTable);
         setUsers(usersFromTable);
         setLoadingUsers(false);
         return;
@@ -60,6 +61,7 @@ export default function SuperuserDashboard({ onSignOut }) {
 
       // Fallback: Get all users from auth system and filter
       console.log("No users in users table, falling back to auth.users...");
+      setAddError("Note: Users are being fetched from auth system. Run the sync script to populate the users table for better role management.");
       
       const { data: allUsers, error } = await supabase.rpc("get_all_users");
 
