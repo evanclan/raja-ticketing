@@ -8,6 +8,7 @@ export default function SuperuserDashboard({ onSignOut }) {
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [addEmail, setAddEmail] = useState("");
   const [addPassword, setAddPassword] = useState("");
+  const [addName, setAddName] = useState("");
   const [addLoading, setAddLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [addError, setAddError] = useState("");
@@ -60,7 +61,10 @@ export default function SuperuserDashboard({ onSignOut }) {
           email: addEmail,
           password: addPassword,
           email_confirm: true,
-          user_metadata: { role: "admin" },
+          user_metadata: { 
+            role: "admin",
+            full_name: addName 
+          },
         });
 
       if (createError) {
@@ -71,6 +75,7 @@ export default function SuperuserDashboard({ onSignOut }) {
           id: user.user.id,
           email: addEmail,
           role: "admin",
+          full_name: addName,
         });
 
         if (insertError) {
@@ -78,9 +83,10 @@ export default function SuperuserDashboard({ onSignOut }) {
             "User created but role assignment failed: " + insertError.message
           );
         } else {
-          setAddSuccess(`✅ Admin created successfully: ${addEmail}`);
+          setAddSuccess(`✅ Admin created successfully: ${addName} (${addEmail})`);
           setAddEmail("");
           setAddPassword("");
+          setAddName("");
           fetchAdmins(); // Refresh admin list
         }
       }
@@ -130,7 +136,7 @@ export default function SuperuserDashboard({ onSignOut }) {
     }
   };
 
-  // Delete user using secure API
+  // Delete user using direct database deletion (since auth.admin.deleteUser requires special permissions)
   const handleDeleteUser = async (userEmail) => {
     if (
       !window.confirm(`Are you sure you want to delete user: ${userEmail}?`)
@@ -143,25 +149,31 @@ export default function SuperuserDashboard({ onSignOut }) {
     setAddSuccess("");
 
     try {
-      // Find user by email and delete
-      const { data: users, error: findError } =
-        await supabase.auth.admin.listUsers();
-      if (findError) throw findError;
+      // Delete from public.users table first
+      const { error: deleteUserError } = await supabase
+        .from("users")
+        .delete()
+        .eq("email", userEmail);
 
-      const userToDelete = users.users.find((u) => u.email === userEmail);
-      if (!userToDelete) throw new Error("User not found");
-
-      // Delete from auth system
-      const { error: deleteError } = await supabase.auth.admin.deleteUser(
-        userToDelete.id
-      );
-
-      if (deleteError) {
-        setAddError("Failed to delete user: " + deleteError.message);
-      } else {
-        setAddSuccess(`User ${userEmail} deleted successfully!`);
-        fetchUsers(); // Refresh the user list
+      if (deleteUserError) {
+        setAddError("Failed to delete user from database: " + deleteUserError.message);
+        return;
       }
+
+      // Also delete from registrations table if exists
+      await supabase
+        .from("registrations")
+        .delete()
+        .eq("user_email", userEmail);
+
+      // Delete from family_members table if exists
+      await supabase
+        .from("family_members")
+        .delete()
+        .eq("user_email", userEmail);
+
+      setAddSuccess(`User ${userEmail} deleted successfully!`);
+      fetchUsers(); // Refresh the user list
     } catch (error) {
       setAddError("Error deleting user: " + error.message);
     } finally {
@@ -229,8 +241,23 @@ export default function SuperuserDashboard({ onSignOut }) {
         </h3>
         <form
           onSubmit={handleAddAdmin}
-          style={{ display: "flex", gap: "1rem", alignItems: "center" }}
+          style={{ display: "flex", gap: "1rem", alignItems: "center", flexWrap: "wrap" }}
         >
+          <input
+            type="text"
+            placeholder="Admin Name"
+            value={addName}
+            onChange={(e) => setAddName(e.target.value)}
+            required
+            style={{
+              padding: "0.5rem",
+              border: "1px solid #d1d5db",
+              borderRadius: "0.375rem",
+              fontSize: "1rem",
+              flex: 1,
+              minWidth: "150px",
+            }}
+          />
           <input
             type="email"
             placeholder="Admin Email"
@@ -244,6 +271,7 @@ export default function SuperuserDashboard({ onSignOut }) {
               borderRadius: "0.375rem",
               fontSize: "1rem",
               flex: 1,
+              minWidth: "150px",
             }}
           />
           <input
@@ -259,6 +287,7 @@ export default function SuperuserDashboard({ onSignOut }) {
               borderRadius: "0.375rem",
               fontSize: "1rem",
               flex: 1,
+              minWidth: "150px",
             }}
           />
           <button
@@ -308,6 +337,7 @@ export default function SuperuserDashboard({ onSignOut }) {
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ background: "#f3f4f6" }}>
+                <th style={{ padding: "0.5rem", textAlign: "left" }}>Name</th>
                 <th style={{ padding: "0.5rem", textAlign: "left" }}>Email</th>
                 <th style={{ padding: "0.5rem", textAlign: "left" }}>
                   Created
@@ -321,6 +351,7 @@ export default function SuperuserDashboard({ onSignOut }) {
                   key={admin.id}
                   style={{ borderBottom: "1px solid #e5e7eb" }}
                 >
+                  <td style={{ padding: "0.5rem" }}>{admin.full_name || "N/A"}</td>
                   <td style={{ padding: "0.5rem" }}>{admin.email}</td>
                   <td style={{ padding: "0.5rem" }}>
                     {new Date(admin.created_at).toLocaleString()}
@@ -370,6 +401,7 @@ export default function SuperuserDashboard({ onSignOut }) {
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ background: "#f3f4f6" }}>
+                <th style={{ padding: "0.5rem", textAlign: "left" }}>Name</th>
                 <th style={{ padding: "0.5rem", textAlign: "left" }}>Email</th>
                 <th style={{ padding: "0.5rem", textAlign: "left" }}>
                   Created
@@ -380,6 +412,7 @@ export default function SuperuserDashboard({ onSignOut }) {
             <tbody>
               {users.map((user) => (
                 <tr key={user.id} style={{ borderBottom: "1px solid #e5e7eb" }}>
+                  <td style={{ padding: "0.5rem" }}>{user.full_name || "N/A"}</td>
                   <td style={{ padding: "0.5rem" }}>{user.email}</td>
                   <td style={{ padding: "0.5rem" }}>
                     {new Date(user.created_at).toLocaleString()}
