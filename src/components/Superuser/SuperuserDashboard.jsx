@@ -49,14 +49,23 @@ export default function SuperuserDashboard({ onSignOut }) {
       
       console.log("All users from auth system:", allUsers);
       
-      // Filter to only show users with role "user"
-      const regularUsers = allUsers.filter(user => {
-        // Check if user has role metadata
-        const userRole = user.user_metadata?.role || user.raw_user_meta_data?.role;
-        return userRole === "user";
+      // Log each user's role information
+      allUsers.forEach(user => {
+        console.log(`User ${user.email}:`, {
+          user_metadata: user.user_metadata,
+          raw_user_meta_data: user.raw_user_meta_data,
+          role: user.user_metadata?.role || user.raw_user_meta_data?.role || 'no role'
+        });
       });
       
-      console.log("Users with role 'user':", regularUsers);
+      // Filter to show users who are NOT admins (instead of requiring role "user")
+      const regularUsers = allUsers.filter(user => {
+        const userRole = user.user_metadata?.role || user.raw_user_meta_data?.role;
+        console.log(`Filtering ${user.email}: role = ${userRole}`);
+        return userRole !== "admin";
+      });
+      
+      console.log("Users who are not admins:", regularUsers);
       
       setUsers(regularUsers);
     } catch (error) {
