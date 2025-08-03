@@ -176,6 +176,15 @@ export default function SuperuserDashboard({ onSignOut }) {
     setAddSuccess("");
 
     try {
+      // First, find the user_id from the users list
+      const userToDelete = users.find(user => user.email === userEmail);
+      if (!userToDelete) {
+        setAddError("User not found in the list");
+        return;
+      }
+
+      const userId = userToDelete.id;
+
       // Delete from public.users table if exists
       const { error: deleteUserError } = await supabase
         .from("users")
@@ -186,21 +195,21 @@ export default function SuperuserDashboard({ onSignOut }) {
         console.log("Could not delete from public.users:", deleteUserError.message);
       }
 
-      // Delete from registrations table if exists
+      // Delete from registrations table using user_id
       const { error: deleteRegError } = await supabase
         .from("registrations")
         .delete()
-        .eq("user_email", userEmail);
+        .eq("user_id", userId);
 
       if (deleteRegError) {
         console.log("Could not delete from registrations:", deleteRegError.message);
       }
 
-      // Delete from family_members table if exists
+      // Delete from family_members table using user_id
       const { error: deleteFamilyError } = await supabase
         .from("family_members")
         .delete()
-        .eq("user_email", userEmail);
+        .eq("user_id", userId);
 
       if (deleteFamilyError) {
         console.log("Could not delete from family_members:", deleteFamilyError.message);
