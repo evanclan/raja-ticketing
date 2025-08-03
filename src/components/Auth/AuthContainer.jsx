@@ -4,64 +4,7 @@ import LoginForm from "./LoginForm";
 import RegisterForm from "./RegisterForm";
 import SuperuserDashboard from "../Superuser/SuperuserDashboard";
 
-function AdminLoginForm({ onSuccess, onBack, onSuperuser }) {
-  return (
-    <div
-      className="test-card"
-      style={{ maxWidth: "400px", margin: "0 auto", position: "relative" }}
-    >
-      {/* Superuser Button Top Left */}
-      <button
-        onClick={onSuperuser}
-        style={{
-          position: "absolute",
-          top: 20,
-          left: 20,
-          backgroundColor: "#3b82f6",
-          color: "white",
-          border: "none",
-          borderRadius: "0.375rem",
-          fontWeight: "bold",
-          fontSize: "1rem",
-          padding: "0.5rem 1.25rem",
-          cursor: "pointer",
-          zIndex: 10,
-        }}
-      >
-        Superuser
-      </button>
-      {/* Back Button */}
-      <button
-        onClick={onBack}
-        style={{
-          position: "absolute",
-          right: 20,
-          top: 20,
-          background: "none",
-          border: "none",
-          color: "#3b82f6",
-          fontWeight: 500,
-          fontSize: "1.25rem",
-          cursor: "pointer",
-        }}
-      >
-        &larr;
-      </button>
-      <h2
-        style={{
-          fontSize: "1.5rem",
-          fontWeight: "bold",
-          color: "#1f2937",
-          marginBottom: "1.5rem",
-          textAlign: "center",
-        }}
-      >
-        Admin Login
-      </h2>
-      <LoginForm onSuccess={onSuccess} hideGuest hideRegister />
-    </div>
-  );
-}
+
 
 function SuperuserLogin({ onBack }) {
   const [username, setUsername] = useState("");
@@ -260,7 +203,6 @@ export default function AuthContainer({ onAuthSuccess }) {
   const [isLogin, setIsLogin] = useState(true);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [adminMode, setAdminMode] = useState(false);
   const [superuserMode, setSuperuserMode] = useState(false);
 
   useEffect(() => {
@@ -402,15 +344,7 @@ export default function AuthContainer({ onAuthSuccess }) {
     return <SuperuserLogin onBack={() => setSuperuserMode(false)} />;
   }
 
-  if (adminMode) {
-    return (
-      <AdminLoginForm
-        onSuccess={handleAuthSuccess}
-        onBack={() => setAdminMode(false)}
-        onSuperuser={() => setSuperuserMode(true)}
-      />
-    );
-  }
+
 
   return (
     <div style={{ position: "relative" }}>
@@ -428,7 +362,7 @@ export default function AuthContainer({ onAuthSuccess }) {
 
       {/* Small Superuser Button - Bottom Left */}
       <button
-        onClick={() => setAdminMode(true)}
+        onClick={() => setSuperuserMode(true)}
         style={{
           position: "absolute",
           bottom: "-3rem",
