@@ -32,27 +32,50 @@ export default function SuperuserDashboard({ onSignOut }) {
     setLoadingAdmins(false);
   };
 
-  // Debug version - show all users in public.users table to see what's there
+  // Comprehensive debug - check both auth and public tables
   const fetchUsers = async () => {
     setLoadingUsers(true);
     setAddError("");
     
     try {
-      // Get ALL users from public.users table without filtering
-      const { data: allUsers, error } = await supabase
-        .from("users")
-        .select("id, email, full_name, role, created_at");
+      console.log("🔍 Checking database contents...");
       
-      if (error) {
-        setAddError("Error fetching users: " + error.message);
-        setLoadingUsers(false);
-        return;
+      // Check public.users table
+      const { data: publicUsers, error: publicError } = await supabase
+        .from("users")
+        .select("*");
+      
+      console.log("📊 Public.users table:", publicUsers);
+      if (publicError) console.log("❌ Public users error:", publicError);
+      
+      // Check auth.users via function
+      const { data: authUsers, error: authError } = await supabase.rpc("get_all_users");
+      
+      console.log("📊 Auth.users (via function):", authUsers);
+      if (authError) console.log("❌ Auth users error:", authError);
+      
+      // Try direct auth query (might not work due to permissions)
+      try {
+        const { data: directAuthUsers, error: directAuthError } = await supabase
+          .from("auth.users")
+          .select("*");
+        console.log("📊 Direct auth.users query:", directAuthUsers);
+        if (directAuthError) console.log("❌ Direct auth error:", directAuthError);
+      } catch (e) {
+        console.log("❌ Direct auth query failed:", e.message);
       }
       
-      console.log("ALL users in public.users table:", allUsers);
-      
-      // Show all users for now
-      setUsers(allUsers);
+      // For now, show public users if they exist, otherwise show auth users
+      if (publicUsers && publicUsers.length > 0) {
+        console.log("✅ Using public.users table");
+        setUsers(publicUsers);
+      } else if (authUsers && authUsers.length > 0) {
+        console.log("✅ Using auth.users table");
+        setUsers(authUsers);
+      } else {
+        console.log("❌ No users found in either table");
+        setUsers([]);
+      }
       
     } catch (error) {
       setAddError("Error fetching users: " + error.message);
