@@ -6,14 +6,12 @@ import UserDashboard from "./components/User/UserDashboard";
 import EventManagementPage from "./components/Admin/EventManagementPage";
 
 function App() {
-  const [showAuth, setShowAuth] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [currentView, setCurrentView] = useState("dashboard"); // "dashboard" | "event-management"
   const [selectedEventId, setSelectedEventId] = useState(null);
 
   const handleAuthSuccess = (user) => {
     setCurrentUser(user);
-    setShowAuth(false);
   };
 
   const handleNavigateToEventManagement = (eventId) => {
@@ -86,20 +84,6 @@ function App() {
               </div>
               <div style={{ display: "flex", gap: "1rem" }}>
                 <button
-                  onClick={() => setShowAuth(true)}
-                  style={{
-                    padding: "0.5rem 1rem",
-                    backgroundColor: "#3b82f6",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "0.375rem",
-                    cursor: "pointer",
-                    fontSize: "0.875rem",
-                  }}
-                >
-                  Manage Account
-                </button>
-                <button
                   onClick={async () => {
                     await supabase.auth.signOut();
                     setCurrentUser(null);
@@ -137,50 +121,8 @@ function App() {
               <UserDashboard user={currentUser} />
             )}
           </div>
-        ) : showAuth ? (
-          <AuthContainer onAuthSuccess={handleAuthSuccess} />
         ) : (
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "2rem",
-              alignItems: "center",
-              justifyContent: "center",
-              minHeight: "60vh",
-            }}
-          >
-            <div style={{ textAlign: "center" }}>
-              <h2
-                style={{
-                  fontSize: "1.25rem",
-                  color: "#6b7280",
-                  marginBottom: "1rem",
-                }}
-              >
-                Welcome to RaJA Ticketing System
-              </h2>
-              <p style={{ color: "#9ca3af", marginBottom: "2rem" }}>
-                Please sign in to continue
-              </p>
-            </div>
-            <button
-              onClick={() => setShowAuth(true)}
-              style={{
-                padding: "0.75rem 1.5rem",
-                backgroundColor: "#3b82f6",
-                color: "white",
-                border: "none",
-                borderRadius: "0.375rem",
-                fontSize: "1rem",
-                fontWeight: "500",
-                cursor: "pointer",
-                transition: "background-color 0.2s",
-              }}
-            >
-              Get Started - Login or Register
-            </button>
-          </div>
+          <AuthContainer onAuthSuccess={handleAuthSuccess} />
         )}
       </div>
     </div>
