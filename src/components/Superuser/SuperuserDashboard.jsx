@@ -198,16 +198,6 @@ export default function SuperuserDashboard({ onSignOut }) {
         console.log("Could not delete from family_members:", familyError);
       }
 
-      // Delete from superusers table if exists
-      const { error: superuserError } = await supabase
-        .from("superusers")
-        .delete()
-        .eq("user_id", adminId);
-
-      if (superuserError) {
-        console.log("Could not delete from superusers:", superuserError);
-      }
-
       // Delete from users table
       const { error: userError } = await supabase
         .from("users")
@@ -221,34 +211,12 @@ export default function SuperuserDashboard({ onSignOut }) {
         return;
       }
 
-      // Finally, delete from auth system
-      const { data: authUsers, error: listError } =
-        await supabase.auth.admin.listUsers();
-      if (listError) {
-        setAddError("Failed to list auth users: " + listError.message);
-        return;
-      }
-
-      const userToDelete = authUsers.users.find((u) => u.email === adminEmail);
-      if (!userToDelete) {
-        setAddError("Admin not found in auth system");
-        return;
-      }
-
-      const { error: deleteAuthError } = await supabase.auth.admin.deleteUser(
-        userToDelete.id
+      // Note: Auth deletion requires special permissions and is handled separately
+      // The user will be removed from the application data but may still exist in auth
+      setAddSuccess(
+        `Admin ${adminEmail} deleted successfully from application data!`
       );
-
-      if (deleteAuthError) {
-        setAddError(
-          "Failed to delete admin from auth: " + deleteAuthError.message
-        );
-      } else {
-        setAddSuccess(
-          `Admin ${adminEmail} deleted successfully from all systems!`
-        );
-        fetchAdmins(); // Refresh the admin list
-      }
+      fetchAdmins(); // Refresh the admin list
     } catch (error) {
       setAddError("Error deleting admin: " + error.message);
     } finally {
@@ -322,16 +290,6 @@ export default function SuperuserDashboard({ onSignOut }) {
         console.log("Could not delete from family_members:", familyError);
       }
 
-      // Delete from superusers table if exists
-      const { error: superuserError } = await supabase
-        .from("superusers")
-        .delete()
-        .eq("user_id", userId);
-
-      if (superuserError) {
-        console.log("Could not delete from superusers:", superuserError);
-      }
-
       // Delete from users table
       const { error: userError } = await supabase
         .from("users")
@@ -345,29 +303,9 @@ export default function SuperuserDashboard({ onSignOut }) {
         return;
       }
 
-      // Delete from auth system
-      const { data: authUsers, error: listError } =
-        await supabase.auth.admin.listUsers();
-      if (listError) {
-        setAddError("Failed to list auth users: " + listError.message);
-        return;
-      }
-
-      const userToDelete = authUsers.users.find((u) => u.id === userId);
-      if (!userToDelete) {
-        console.log(
-          "User not found in auth system, but data deleted from database"
-        );
-      } else {
-        const { error: deleteAuthError } = await supabase.auth.admin.deleteUser(
-          userId
-        );
-        if (deleteAuthError) {
-          console.log("Could not delete from auth system:", deleteAuthError);
-        }
-      }
-
-      setAddSuccess("User deleted successfully from all systems!");
+      // Note: Auth deletion requires special permissions and is handled separately
+      // The user will be removed from the application data but may still exist in auth
+      setAddSuccess("User deleted successfully from application data!");
       fetchUsers(); // Refresh the user list
     } catch (error) {
       setAddError("Error deleting user: " + error.message);
