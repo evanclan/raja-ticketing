@@ -38,7 +38,29 @@ export default function SuperuserDashboard({ onSignOut }) {
     setAddError("");
 
     try {
-      // Get all users from auth system
+      // First try to get users from the users table with actual roles
+      const { data: usersFromTable, error: tableError } = await supabase
+        .from("users")
+        .select("*")
+        .neq("role", "admin")
+        .order("created_at", { ascending: false });
+
+      if (tableError) {
+        console.log("Could not fetch from users table:", tableError);
+      }
+
+      console.log("Users from users table:", usersFromTable);
+
+      // If we have users from the table, use them
+      if (usersFromTable && usersFromTable.length > 0) {
+        setUsers(usersFromTable);
+        setLoadingUsers(false);
+        return;
+      }
+
+      // Fallback: Get all users from auth system and filter
+      console.log("No users in users table, falling back to auth.users...");
+      
       const { data: allUsers, error } = await supabase.rpc("get_all_users");
 
       if (error) {
@@ -70,7 +92,7 @@ export default function SuperuserDashboard({ onSignOut }) {
         id: user.id,
         email: user.email,
         full_name: user.email, // Use email as fallback for name
-        role: 'user',
+        role: 'regular', // Since these are non-admin users
         created_at: user.created_at,
         updated_at: user.created_at
       }));
