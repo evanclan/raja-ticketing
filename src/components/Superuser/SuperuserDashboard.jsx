@@ -32,51 +32,36 @@ export default function SuperuserDashboard({ onSignOut }) {
     setLoadingAdmins(false);
   };
 
-  // Comprehensive debug - check both auth and public tables
+  // Fixed version - use auth.users and filter by role
   const fetchUsers = async () => {
     setLoadingUsers(true);
     setAddError("");
     
     try {
-      console.log("🔍 Checking database contents...");
+      // Get all users from auth system
+      const { data: allAuthUsers, error: authError } = await supabase.rpc("get_all_users");
       
-      // Check public.users table
-      const { data: publicUsers, error: publicError } = await supabase
-        .from("users")
-        .select("*");
-      
-      console.log("📊 Public.users table:", publicUsers);
-      if (publicError) console.log("❌ Public users error:", publicError);
-      
-      // Check auth.users via function
-      const { data: authUsers, error: authError } = await supabase.rpc("get_all_users");
-      
-      console.log("📊 Auth.users (via function):", authUsers);
-      if (authError) console.log("❌ Auth users error:", authError);
-      
-      // Try direct auth query (might not work due to permissions)
-      try {
-        const { data: directAuthUsers, error: directAuthError } = await supabase
-          .from("auth.users")
-          .select("*");
-        console.log("📊 Direct auth.users query:", directAuthUsers);
-        if (directAuthError) console.log("❌ Direct auth error:", directAuthError);
-      } catch (e) {
-        console.log("❌ Direct auth query failed:", e.message);
+      if (authError) {
+        setAddError("Error fetching users: " + authError.message);
+        setLoadingUsers(false);
+        return;
       }
-      
-      // For now, show public users if they exist, otherwise show auth users
-      if (publicUsers && publicUsers.length > 0) {
-        console.log("✅ Using public.users table");
-        setUsers(publicUsers);
-      } else if (authUsers && authUsers.length > 0) {
-        console.log("✅ Using auth.users table");
-        setUsers(authUsers);
-      } else {
-        console.log("❌ No users found in either table");
-        setUsers([]);
-      }
-      
+
+      console.log("All auth users:", allAuthUsers);
+
+      // Filter out admins and superuser - show only regular users
+      const regularUsers = allAuthUsers.filter(user => {
+        // Exclude superuser email
+        if (user.email === 'superuser@example.com') return false;
+        
+        // For now, show all users except superuser
+        // We'll need to check their actual roles in user_metadata
+        return true;
+      });
+
+      console.log("Regular users (non-superuser):", regularUsers);
+      setUsers(regularUsers);
+
     } catch (error) {
       setAddError("Error fetching users: " + error.message);
     } finally {
@@ -175,38 +160,59 @@ export default function SuperuserDashboard({ onSignOut }) {
     }
   };
 
-  // Simple user deletion
   const handleDeleteUser = async (userEmail) => {
-    if (
-      !window.confirm(`Are you sure you want to delete user: ${userEmail}?`)
-    ) {
+    if (!window.confirm(`Are you sure you want to delete user ${userEmail}?`)) {
       return;
     }
 
-    setDeleteLoading(true);
+    setLoadingUsers(true);
     setAddError("");
-    setAddSuccess("");
 
     try {
-      // Delete from users table
-      const { error } = await supabase
-        .from("users")
-        .delete()
-        .eq("email", userEmail);
-
-      if (error) {
-        setAddError("Failed to delete user: " + error.message);
+      // For auth users, we can't delete from auth system directly
+      // But we can delete their data from related tables
+      
+      // First, find the user_id from auth system
+      const { data: authUsers } = await supabase.rpc("get_all_users");
+      const userToDelete = authUsers.find(u => u.email === userEmail);
+      
+      if (!userToDelete) {
+        setAddError("User not found");
+        setLoadingUsers(false);
         return;
       }
 
-      setAddSuccess(`User ${userEmail} deleted successfully!`);
+      const userId = userToDelete.id;
+
+      // Delete from registrations table
+      const { error: regError } = await supabase
+        .from("registrations")
+        .delete()
+        .eq("user_id", userId);
+
+      if (regError) {
+        console.log("Could not delete from registrations:", regError);
+      }
+
+      // Delete from family_members table
+      const { error: familyError } = await supabase
+        .from("family_members")
+        .delete()
+        .eq("user_id", userId);
+
+      if (familyError) {
+        console.log("Could not delete from family_members:", familyError);
+      }
+
+      // Remove from local state
+      setUsers(users.filter(user => user.email !== userEmail));
       
-      // Refresh the user list
-      fetchUsers();
+      setAddSuccess(`User ${userEmail} data deleted successfully! Note: User may still exist in auth system.`);
+      
     } catch (error) {
       setAddError("Error deleting user: " + error.message);
     } finally {
-      setDeleteLoading(false);
+      setLoadingUsers(false);
     }
   };
 
