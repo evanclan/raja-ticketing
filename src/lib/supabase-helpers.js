@@ -1,4 +1,4 @@
-import { supabase } from "./supabase.js";
+import { supabase } from "./supabase.ts";
 
 // Database helper functions for Cursor AI to use
 

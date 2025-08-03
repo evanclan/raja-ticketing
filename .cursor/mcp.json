@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "supabase": {
+      "command": "npx",
+      "args": ["@supabase/mcp-server-supabase"],
+      "env": {
+        "SUPABASE_ACCESS_TOKEN": "sbp_be2ebc609b53d9e8690eefd496fa890110267d4b",
+        "SUPABASE_PROJECT_REF": "vwadfrbnalrkpiygjxhh"
+      }
+    }
+  },
+  "settings": {
+    "supabase": {
+      "enableSchemaCompletions": true,
+      "enableTypeScriptSupport": true,
+      "autoGenerateTypes": true
+    }
+  }
+}

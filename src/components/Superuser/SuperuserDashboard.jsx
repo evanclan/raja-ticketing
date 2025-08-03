@@ -10,7 +10,7 @@ export default function SuperuserDashboard({ onSignOut }) {
   const [addPassword, setAddPassword] = useState("");
   const [addName, setAddName] = useState("");
   const [addLoading, setAddLoading] = useState(false);
-  const [deleteLoading, setDeleteLoading] = useState(false);
+
   const [addError, setAddError] = useState("");
   const [addSuccess, setAddSuccess] = useState("");
 
@@ -32,36 +32,25 @@ export default function SuperuserDashboard({ onSignOut }) {
     setLoadingAdmins(false);
   };
 
-  // Fixed version - use auth.users and filter by role
+  // Fetch registered users from users table with role 'user'
   const fetchUsers = async () => {
     setLoadingUsers(true);
     setAddError("");
-    
+
     try {
-      // Get all users from auth system
-      const { data: allAuthUsers, error: authError } = await supabase.rpc("get_all_users");
-      
-      if (authError) {
-        setAddError("Error fetching users: " + authError.message);
-        setLoadingUsers(false);
-        return;
+      // Get users from the users table where role is 'user'
+      const { data: registeredUsers, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("role", "user")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        setAddError("Error fetching users: " + error.message);
+      } else {
+        console.log("Registered users:", registeredUsers);
+        setUsers(registeredUsers || []);
       }
-
-      console.log("All auth users:", allAuthUsers);
-
-      // Filter out admins and superuser - show only regular users
-      const regularUsers = allAuthUsers.filter(user => {
-        // Exclude superuser email
-        if (user.email === 'superuser@example.com') return false;
-        
-        // For now, show all users except superuser
-        // We'll need to check their actual roles in user_metadata
-        return true;
-      });
-
-      console.log("Regular users (non-superuser):", regularUsers);
-      setUsers(regularUsers);
-
     } catch (error) {
       setAddError("Error fetching users: " + error.message);
     } finally {
@@ -85,9 +74,9 @@ export default function SuperuserDashboard({ onSignOut }) {
           email: addEmail,
           password: addPassword,
           email_confirm: true,
-          user_metadata: { 
+          user_metadata: {
             role: "admin",
-            full_name: addName 
+            full_name: addName,
           },
         });
 
@@ -107,7 +96,9 @@ export default function SuperuserDashboard({ onSignOut }) {
             "User created but role assignment failed: " + insertError.message
           );
         } else {
-          setAddSuccess(`✅ Admin created successfully: ${addName} (${addEmail})`);
+          setAddSuccess(
+            `✅ Admin created successfully: ${addName} (${addEmail})`
+          );
           setAddEmail("");
           setAddPassword("");
           setAddName("");
@@ -160,8 +151,8 @@ export default function SuperuserDashboard({ onSignOut }) {
     }
   };
 
-  const handleDeleteUser = async (userEmail) => {
-    if (!window.confirm(`Are you sure you want to delete user ${userEmail}?`)) {
+  const handleDeleteUser = async (userId) => {
+    if (!window.confirm(`Are you sure you want to delete this user?`)) {
       return;
     }
 
@@ -169,22 +160,7 @@ export default function SuperuserDashboard({ onSignOut }) {
     setAddError("");
 
     try {
-      // For auth users, we can't delete from auth system directly
-      // But we can delete their data from related tables
-      
-      // First, find the user_id from auth system
-      const { data: authUsers } = await supabase.rpc("get_all_users");
-      const userToDelete = authUsers.find(u => u.email === userEmail);
-      
-      if (!userToDelete) {
-        setAddError("User not found");
-        setLoadingUsers(false);
-        return;
-      }
-
-      const userId = userToDelete.id;
-
-      // Delete from registrations table
+      // Delete from registrations table first (foreign key constraint)
       const { error: regError } = await supabase
         .from("registrations")
         .delete()
@@ -204,11 +180,19 @@ export default function SuperuserDashboard({ onSignOut }) {
         console.log("Could not delete from family_members:", familyError);
       }
 
-      // Remove from local state
-      setUsers(users.filter(user => user.email !== userEmail));
-      
-      setAddSuccess(`User ${userEmail} data deleted successfully! Note: User may still exist in auth system.`);
-      
+      // Delete from users table
+      const { error: userError } = await supabase
+        .from("users")
+        .delete()
+        .eq("id", userId);
+
+      if (userError) {
+        setAddError("Error deleting user: " + userError.message);
+      } else {
+        // Remove from local state
+        setUsers(users.filter((user) => user.id !== userId));
+        setAddSuccess("User deleted successfully!");
+      }
     } catch (error) {
       setAddError("Error deleting user: " + error.message);
     } finally {
@@ -276,7 +260,12 @@ export default function SuperuserDashboard({ onSignOut }) {
         </h3>
         <form
           onSubmit={handleAddAdmin}
-          style={{ display: "flex", gap: "1rem", alignItems: "center", flexWrap: "wrap" }}
+          style={{
+            display: "flex",
+            gap: "1rem",
+            alignItems: "center",
+            flexWrap: "wrap",
+          }}
         >
           <input
             type="text"
@@ -386,7 +375,9 @@ export default function SuperuserDashboard({ onSignOut }) {
                   key={admin.id}
                   style={{ borderBottom: "1px solid #e5e7eb" }}
                 >
-                  <td style={{ padding: "0.5rem" }}>{admin.full_name || "N/A"}</td>
+                  <td style={{ padding: "0.5rem" }}>
+                    {admin.full_name || "N/A"}
+                  </td>
                   <td style={{ padding: "0.5rem" }}>{admin.email}</td>
                   <td style={{ padding: "0.5rem" }}>
                     {new Date(admin.created_at).toLocaleString()}
@@ -447,27 +438,29 @@ export default function SuperuserDashboard({ onSignOut }) {
             <tbody>
               {users.map((user) => (
                 <tr key={user.id} style={{ borderBottom: "1px solid #e5e7eb" }}>
-                  <td style={{ padding: "0.5rem" }}>{user.full_name || "N/A"}</td>
+                  <td style={{ padding: "0.5rem" }}>
+                    {user.full_name || "N/A"}
+                  </td>
                   <td style={{ padding: "0.5rem" }}>{user.email}</td>
                   <td style={{ padding: "0.5rem" }}>
                     {new Date(user.created_at).toLocaleString()}
                   </td>
                   <td style={{ padding: "0.5rem" }}>
                     <button
-                      onClick={() => handleDeleteUser(user.email)}
-                      disabled={deleteLoading}
+                      onClick={() => handleDeleteUser(user.id)}
+                      disabled={loadingUsers}
                       style={{
                         padding: "0.25rem 0.75rem",
-                        backgroundColor: deleteLoading ? "#9ca3af" : "#ef4444",
+                        backgroundColor: loadingUsers ? "#9ca3af" : "#ef4444",
                         color: "white",
                         border: "none",
                         borderRadius: "0.375rem",
                         fontWeight: "bold",
                         fontSize: "0.9rem",
-                        cursor: deleteLoading ? "not-allowed" : "pointer",
+                        cursor: loadingUsers ? "not-allowed" : "pointer",
                       }}
                     >
-                      {deleteLoading ? "Deleting..." : "Delete"}
+                      {loadingUsers ? "Deleting..." : "Delete"}
                     </button>
                   </td>
                 </tr>

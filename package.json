@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@supabase/mcp-server-supabase": "^0.4.5",
     "@supabase/supabase-js": "^2.52.0",
     "lucide-react": "^0.525.0",
     "qr-scanner": "^1.4.2",
@@ -30,6 +31,7 @@
     "globals": "^16.3.0",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.17",
+    "typescript": "^5.9.2",
     "vite": "^6.3.5"
   }
 }
