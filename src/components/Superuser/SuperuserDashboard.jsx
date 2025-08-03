@@ -38,20 +38,49 @@ export default function SuperuserDashboard({ onSignOut }) {
     setAddError("");
 
     try {
-      // Get users from the users table where role is 'user'
-      const { data: registeredUsers, error } = await supabase
+      // First, try to get users from the users table where role is 'user'
+      let { data: registeredUsers, error } = await supabase
         .from("users")
         .select("*")
         .eq("role", "user")
         .order("created_at", { ascending: false });
 
       if (error) {
+        console.error("Error fetching from users table:", error);
         setAddError("Error fetching users: " + error.message);
+        setLoadingUsers(false);
+        return;
+      }
+
+      console.log("Registered users from users table:", registeredUsers);
+
+      // If no users found, try to get from auth.users as fallback
+      if (!registeredUsers || registeredUsers.length === 0) {
+        console.log("No users found in users table, trying auth.users...");
+
+        const { data: authUsers, error: authError } = await supabase.rpc("get_all_users");
+
+        if (authError) {
+          console.error("Error fetching from auth.users:", authError);
+          setAddError("Error fetching users: " + authError.message);
+        } else {
+          console.log("Auth users found:", authUsers);
+          // Transform auth users to match our expected format
+          const transformedUsers = authUsers.map(user => ({
+            id: user.id,
+            email: user.email,
+            full_name: user.email, // Use email as fallback for name
+            role: 'user',
+            created_at: user.created_at,
+            updated_at: user.created_at
+          }));
+          setUsers(transformedUsers);
+        }
       } else {
-        console.log("Registered users:", registeredUsers);
-        setUsers(registeredUsers || []);
+        setUsers(registeredUsers);
       }
     } catch (error) {
+      console.error("Error in fetchUsers:", error);
       setAddError("Error fetching users: " + error.message);
     } finally {
       setLoadingUsers(false);
