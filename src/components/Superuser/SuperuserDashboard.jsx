@@ -163,7 +163,7 @@ export default function SuperuserDashboard({ onSignOut }) {
     }
   };
 
-  // Delete user from auth system and related data
+  // Delete user from database tables (auth system deletion requires special permissions)
   const handleDeleteUser = async (userEmail) => {
     if (
       !window.confirm(`Are you sure you want to delete user: ${userEmail}?`)
@@ -176,51 +176,42 @@ export default function SuperuserDashboard({ onSignOut }) {
     setAddSuccess("");
 
     try {
-      // First, try to find the user in auth system
-      const { data: authUsers, error: findError } = await supabase.auth.admin.listUsers();
-      
-      if (findError) {
-        setAddError("Could not access auth system: " + findError.message);
-        return;
-      }
-
-      const userToDelete = authUsers.users.find((u) => u.email === userEmail);
-      if (!userToDelete) {
-        setAddError("User not found in auth system");
-        return;
-      }
-
-      // Try to delete from auth system
-      const { error: authDeleteError } = await supabase.auth.admin.deleteUser(userToDelete.id);
-      if (authDeleteError) {
-        setAddError("Failed to delete user from auth system: " + authDeleteError.message);
-        return;
-      }
-
-      // Also delete from public.users table if exists
-      await supabase
+      // Delete from public.users table if exists
+      const { error: deleteUserError } = await supabase
         .from("users")
         .delete()
         .eq("email", userEmail);
 
-      // Also delete from registrations table if exists
-      await supabase
+      if (deleteUserError) {
+        console.log("Could not delete from public.users:", deleteUserError.message);
+      }
+
+      // Delete from registrations table if exists
+      const { error: deleteRegError } = await supabase
         .from("registrations")
         .delete()
         .eq("user_email", userEmail);
 
+      if (deleteRegError) {
+        console.log("Could not delete from registrations:", deleteRegError.message);
+      }
+
       // Delete from family_members table if exists
-      await supabase
+      const { error: deleteFamilyError } = await supabase
         .from("family_members")
         .delete()
         .eq("user_email", userEmail);
 
-      setAddSuccess(`User ${userEmail} deleted successfully!`);
+      if (deleteFamilyError) {
+        console.log("Could not delete from family_members:", deleteFamilyError.message);
+      }
+
+      setAddSuccess(`User ${userEmail} data deleted successfully! Note: User may still exist in auth system.`);
       
       // Refresh the user list immediately
       fetchUsers();
     } catch (error) {
-      setAddError("Error deleting user: " + error.message);
+      setAddError("Error deleting user data: " + error.message);
     } finally {
       setDeleteLoading(false);
     }
