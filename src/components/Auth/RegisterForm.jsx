@@ -55,12 +55,22 @@ export default function RegisterForm({ onSuccess, onSwitchToLogin }) {
         options: {
           data: {
             full_name: formData.fullName,
+            role: 'user', // Set default role
           },
         },
       });
 
       if (error) {
-        setError(error.message);
+        // Handle specific error cases
+        if (error.message.includes("already registered") || error.message.includes("already been registered")) {
+          setError("This email is already registered. Please try logging in instead. If you need to reset your account, please contact support.");
+        } else if (error.message.includes("Invalid email")) {
+          setError("Please enter a valid email address.");
+        } else if (error.message.includes("Password")) {
+          setError("Password must be at least 6 characters long.");
+        } else {
+          setError(error.message);
+        }
       } else {
         setMessage(
           "Registration successful! Please check your email for verification."
@@ -69,7 +79,8 @@ export default function RegisterForm({ onSuccess, onSwitchToLogin }) {
           onSuccess(data.user);
         }
       }
-    } catch {
+    } catch (error) {
+      console.error("Registration error:", error);
       setError("An unexpected error occurred. Please try again.");
     } finally {
       setLoading(false);
