@@ -36,16 +36,25 @@ export default function SuperuserDashboard({ onSignOut }) {
   const fetchUsers = async () => {
     setLoadingUsers(true);
     setAddError("");
-    const { data, error } = await supabase
-      .from("users")
-      .select("id, email, full_name, created_at")
-      .neq("role", "admin"); // Exclude admins since they have their own list
     
-    if (error) {
-      setAddError("Error fetching users: " + error.message);
-    } else {
-      setUsers(data);
+    // First, let's see what's actually in the users table
+    const { data: allUsers, error: allError } = await supabase
+      .from("users")
+      .select("id, email, full_name, role, created_at");
+    
+    if (allError) {
+      setAddError("Error fetching users: " + allError.message);
+      setLoadingUsers(false);
+      return;
     }
+    
+    console.log("All users in database:", allUsers);
+    
+    // Filter out admins manually to see what we have
+    const regularUsers = allUsers.filter(user => user.role !== "admin");
+    console.log("Regular users (non-admin):", regularUsers);
+    
+    setUsers(regularUsers);
     setLoadingUsers(false);
   };
 
