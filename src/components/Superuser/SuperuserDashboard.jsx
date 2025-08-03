@@ -32,17 +32,16 @@ export default function SuperuserDashboard({ onSignOut }) {
     setLoadingAdmins(false);
   };
 
-  // Simple solution - get users with role 'user' from public.users table
+  // Debug version - show all users in public.users table to see what's there
   const fetchUsers = async () => {
     setLoadingUsers(true);
     setAddError("");
     
     try {
-      // Direct query to public.users table for users with role 'user'
-      const { data: users, error } = await supabase
+      // Get ALL users from public.users table without filtering
+      const { data: allUsers, error } = await supabase
         .from("users")
-        .select("id, email, full_name, role, created_at")
-        .eq("role", "user");
+        .select("id, email, full_name, role, created_at");
       
       if (error) {
         setAddError("Error fetching users: " + error.message);
@@ -50,8 +49,10 @@ export default function SuperuserDashboard({ onSignOut }) {
         return;
       }
       
-      console.log("Users with role 'user':", users);
-      setUsers(users);
+      console.log("ALL users in public.users table:", allUsers);
+      
+      // Show all users for now
+      setUsers(allUsers);
       
     } catch (error) {
       setAddError("Error fetching users: " + error.message);
