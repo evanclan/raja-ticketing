@@ -32,11 +32,15 @@ export default function SuperuserDashboard({ onSignOut }) {
     setLoadingAdmins(false);
   };
 
-  // Fetch all users
+  // Fetch all users from public.users table instead of auth.users
   const fetchUsers = async () => {
     setLoadingUsers(true);
     setAddError("");
-    const { data, error } = await supabase.rpc("get_all_users");
+    const { data, error } = await supabase
+      .from("users")
+      .select("id, email, full_name, created_at")
+      .neq("role", "admin"); // Exclude admins since they have their own list
+    
     if (error) {
       setAddError("Error fetching users: " + error.message);
     } else {
@@ -136,7 +140,7 @@ export default function SuperuserDashboard({ onSignOut }) {
     }
   };
 
-  // Delete user using direct database deletion (since auth.admin.deleteUser requires special permissions)
+  // Delete user from public.users table and related data
   const handleDeleteUser = async (userEmail) => {
     if (
       !window.confirm(`Are you sure you want to delete user: ${userEmail}?`)
@@ -149,7 +153,7 @@ export default function SuperuserDashboard({ onSignOut }) {
     setAddSuccess("");
 
     try {
-      // Delete from public.users table first
+      // Delete from public.users table
       const { error: deleteUserError } = await supabase
         .from("users")
         .delete()
@@ -173,7 +177,9 @@ export default function SuperuserDashboard({ onSignOut }) {
         .eq("user_email", userEmail);
 
       setAddSuccess(`User ${userEmail} deleted successfully!`);
-      fetchUsers(); // Refresh the user list
+      
+      // Refresh the user list immediately
+      fetchUsers();
     } catch (error) {
       setAddError("Error deleting user: " + error.message);
     } finally {
