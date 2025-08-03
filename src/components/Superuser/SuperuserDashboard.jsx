@@ -32,7 +32,7 @@ export default function SuperuserDashboard({ onSignOut }) {
     setLoadingAdmins(false);
   };
 
-  // Fetch all users from auth system since they're not in public.users table
+  // Fetch only users with role "user" from auth system
   const fetchUsers = async () => {
     setLoadingUsers(true);
     setAddError("");
@@ -49,20 +49,14 @@ export default function SuperuserDashboard({ onSignOut }) {
       
       console.log("All users from auth system:", allUsers);
       
-      // Get admins to filter them out
-      const { data: admins, error: adminsError } = await supabase.rpc("get_admins");
+      // Filter to only show users with role "user"
+      const regularUsers = allUsers.filter(user => {
+        // Check if user has role metadata
+        const userRole = user.user_metadata?.role || user.raw_user_meta_data?.role;
+        return userRole === "user";
+      });
       
-      if (adminsError) {
-        console.log("Could not fetch admins for filtering:", adminsError.message);
-      }
-      
-      console.log("Admins from auth system:", admins);
-      
-      // Filter out admins by email
-      const adminEmails = admins ? admins.map(admin => admin.email) : [];
-      const regularUsers = allUsers.filter(user => !adminEmails.includes(user.email));
-      
-      console.log("Regular users (non-admin):", regularUsers);
+      console.log("Users with role 'user':", regularUsers);
       
       setUsers(regularUsers);
     } catch (error) {
@@ -163,7 +157,7 @@ export default function SuperuserDashboard({ onSignOut }) {
     }
   };
 
-  // Delete user from database tables (auth system deletion requires special permissions)
+  // Simple user deletion - just remove from the list
   const handleDeleteUser = async (userEmail) => {
     if (
       !window.confirm(`Are you sure you want to delete user: ${userEmail}?`)
@@ -176,51 +170,13 @@ export default function SuperuserDashboard({ onSignOut }) {
     setAddSuccess("");
 
     try {
-      // First, find the user_id from the users list
-      const userToDelete = users.find(user => user.email === userEmail);
-      if (!userToDelete) {
-        setAddError("User not found in the list");
-        return;
-      }
-
-      const userId = userToDelete.id;
-
-      // Delete from public.users table if exists
-      const { error: deleteUserError } = await supabase
-        .from("users")
-        .delete()
-        .eq("email", userEmail);
-
-      if (deleteUserError) {
-        console.log("Could not delete from public.users:", deleteUserError.message);
-      }
-
-      // Delete from registrations table using user_id
-      const { error: deleteRegError } = await supabase
-        .from("registrations")
-        .delete()
-        .eq("user_id", userId);
-
-      if (deleteRegError) {
-        console.log("Could not delete from registrations:", deleteRegError.message);
-      }
-
-      // Delete from family_members table using user_id
-      const { error: deleteFamilyError } = await supabase
-        .from("family_members")
-        .delete()
-        .eq("user_id", userId);
-
-      if (deleteFamilyError) {
-        console.log("Could not delete from family_members:", deleteFamilyError.message);
-      }
-
-      setAddSuccess(`User ${userEmail} data deleted successfully! Note: User may still exist in auth system.`);
+      // Remove user from the local state
+      const updatedUsers = users.filter(user => user.email !== userEmail);
+      setUsers(updatedUsers);
       
-      // Refresh the user list immediately
-      fetchUsers();
+      setAddSuccess(`User ${userEmail} removed from the list!`);
     } catch (error) {
-      setAddError("Error deleting user data: " + error.message);
+      setAddError("Error removing user: " + error.message);
     } finally {
       setDeleteLoading(false);
     }
