@@ -400,6 +400,7 @@ export default function SuperuserDashboard({ onSignOut }) {
               <tr style={{ background: "#f3f4f6" }}>
                 <th style={{ padding: "0.5rem", textAlign: "left" }}>Name</th>
                 <th style={{ padding: "0.5rem", textAlign: "left" }}>Email</th>
+                <th style={{ padding: "0.5rem", textAlign: "left" }}>Role</th>
                 <th style={{ padding: "0.5rem", textAlign: "left" }}>
                   Created
                 </th>
@@ -416,6 +417,18 @@ export default function SuperuserDashboard({ onSignOut }) {
                     {admin.full_name || "N/A"}
                   </td>
                   <td style={{ padding: "0.5rem" }}>{admin.email}</td>
+                  <td style={{ padding: "0.5rem" }}>
+                    <span style={{
+                      backgroundColor: "#3b82f6",
+                      color: "white",
+                      padding: "0.25rem 0.5rem",
+                      borderRadius: "0.25rem",
+                      fontSize: "0.75rem",
+                      fontWeight: "bold"
+                    }}>
+                      {admin.role || "admin"}
+                    </span>
+                  </td>
                   <td style={{ padding: "0.5rem" }}>
                     {new Date(admin.created_at).toLocaleString()}
                   </td>
@@ -466,6 +479,7 @@ export default function SuperuserDashboard({ onSignOut }) {
               <tr style={{ background: "#f3f4f6" }}>
                 <th style={{ padding: "0.5rem", textAlign: "left" }}>Name</th>
                 <th style={{ padding: "0.5rem", textAlign: "left" }}>Email</th>
+                <th style={{ padding: "0.5rem", textAlign: "left" }}>Role</th>
                 <th style={{ padding: "0.5rem", textAlign: "left" }}>
                   Created
                 </th>
@@ -479,6 +493,18 @@ export default function SuperuserDashboard({ onSignOut }) {
                     {user.full_name || "N/A"}
                   </td>
                   <td style={{ padding: "0.5rem" }}>{user.email}</td>
+                  <td style={{ padding: "0.5rem" }}>
+                    <span style={{
+                      backgroundColor: "#10b981",
+                      color: "white",
+                      padding: "0.25rem 0.5rem",
+                      borderRadius: "0.25rem",
+                      fontSize: "0.75rem",
+                      fontWeight: "bold"
+                    }}>
+                      {user.role || "user"}
+                    </span>
+                  </td>
                   <td style={{ padding: "0.5rem" }}>
                     {new Date(user.created_at).toLocaleString()}
                   </td>
