@@ -32,30 +32,44 @@ export default function SuperuserDashboard({ onSignOut }) {
     setLoadingAdmins(false);
   };
 
-  // Fetch all users from public.users table instead of auth.users
+  // Fetch all users from auth system since they're not in public.users table
   const fetchUsers = async () => {
     setLoadingUsers(true);
     setAddError("");
     
-    // First, let's see what's actually in the users table
-    const { data: allUsers, error: allError } = await supabase
-      .from("users")
-      .select("id, email, full_name, role, created_at");
-    
-    if (allError) {
-      setAddError("Error fetching users: " + allError.message);
+    try {
+      // Use the get_all_users function which pulls from auth.users
+      const { data: allUsers, error: allError } = await supabase.rpc("get_all_users");
+      
+      if (allError) {
+        setAddError("Error fetching users: " + allError.message);
+        setLoadingUsers(false);
+        return;
+      }
+      
+      console.log("All users from auth system:", allUsers);
+      
+      // Get admins to filter them out
+      const { data: admins, error: adminsError } = await supabase.rpc("get_admins");
+      
+      if (adminsError) {
+        console.log("Could not fetch admins for filtering:", adminsError.message);
+      }
+      
+      console.log("Admins from auth system:", admins);
+      
+      // Filter out admins by email
+      const adminEmails = admins ? admins.map(admin => admin.email) : [];
+      const regularUsers = allUsers.filter(user => !adminEmails.includes(user.email));
+      
+      console.log("Regular users (non-admin):", regularUsers);
+      
+      setUsers(regularUsers);
+    } catch (error) {
+      setAddError("Error fetching users: " + error.message);
+    } finally {
       setLoadingUsers(false);
-      return;
     }
-    
-    console.log("All users in database:", allUsers);
-    
-    // Filter out admins manually to see what we have
-    const regularUsers = allUsers.filter(user => user.role !== "admin");
-    console.log("Regular users (non-admin):", regularUsers);
-    
-    setUsers(regularUsers);
-    setLoadingUsers(false);
   };
 
   // Add a new admin using NEW PROPER admin creation system
@@ -149,7 +163,7 @@ export default function SuperuserDashboard({ onSignOut }) {
     }
   };
 
-  // Delete user from public.users table and related data
+  // Delete user from auth system and related data
   const handleDeleteUser = async (userEmail) => {
     if (
       !window.confirm(`Are you sure you want to delete user: ${userEmail}?`)
@@ -162,16 +176,32 @@ export default function SuperuserDashboard({ onSignOut }) {
     setAddSuccess("");
 
     try {
-      // Delete from public.users table
-      const { error: deleteUserError } = await supabase
+      // First, try to find the user in auth system
+      const { data: authUsers, error: findError } = await supabase.auth.admin.listUsers();
+      
+      if (findError) {
+        setAddError("Could not access auth system: " + findError.message);
+        return;
+      }
+
+      const userToDelete = authUsers.users.find((u) => u.email === userEmail);
+      if (!userToDelete) {
+        setAddError("User not found in auth system");
+        return;
+      }
+
+      // Try to delete from auth system
+      const { error: authDeleteError } = await supabase.auth.admin.deleteUser(userToDelete.id);
+      if (authDeleteError) {
+        setAddError("Failed to delete user from auth system: " + authDeleteError.message);
+        return;
+      }
+
+      // Also delete from public.users table if exists
+      await supabase
         .from("users")
         .delete()
         .eq("email", userEmail);
-
-      if (deleteUserError) {
-        setAddError("Failed to delete user from database: " + deleteUserError.message);
-        return;
-      }
 
       // Also delete from registrations table if exists
       await supabase
