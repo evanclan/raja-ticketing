@@ -51,6 +51,7 @@ export default function SuperuserDashboard({ onSignOut }) {
     setAddError("");
 
     try {
+      console.log("🔄 Fetching users from database...");
       const { data, error } = await supabase
         .from("users")
         .select("*")
@@ -58,12 +59,14 @@ export default function SuperuserDashboard({ onSignOut }) {
         .order("created_at", { ascending: false });
 
       if (error) {
+        console.log("❌ Error fetching users:", error);
         setAddError("Error fetching users: " + error.message);
       } else {
-        console.log("Users from users table:", data);
+        console.log("✅ Users fetched successfully:", data?.length || 0, "users");
         setUsers(data || []);
       }
     } catch (error) {
+      console.log("❌ Exception in fetchUsers:", error);
       console.error("Error in fetchUsers:", error);
       setAddError("Error fetching users: " + error.message);
     } finally {
@@ -311,7 +314,13 @@ export default function SuperuserDashboard({ onSignOut }) {
       // The user will be removed from the application data but may still exist in auth
       console.log("✅ User deletion completed successfully!");
       setAddSuccess("User deleted successfully from application data!");
-      fetchUsers(); // Refresh the user list
+      
+      // Force refresh by clearing state and refetching
+      console.log("🔄 Forcing refresh of user list...");
+      setUsers([]); // Clear current state
+      setTimeout(() => {
+        fetchUsers(); // Refresh the user list after a short delay
+      }, 500);
     } catch (error) {
       console.log("❌ Error in delete user process:", error);
       setAddError("Error deleting user: " + error.message);
@@ -545,16 +554,36 @@ export default function SuperuserDashboard({ onSignOut }) {
 
       {/* User List */}
       <div>
-        <h3
-          style={{
-            fontSize: "1.25rem",
-            fontWeight: "bold",
-            color: "#1f2937",
-            marginBottom: "1rem",
-          }}
-        >
-          Registered Users
-        </h3>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+          <h3
+            style={{
+              fontSize: "1.25rem",
+              fontWeight: "bold",
+              color: "#1f2937",
+            }}
+          >
+            Registered Users
+          </h3>
+          <button
+            onClick={() => {
+              console.log("🔄 Manual refresh triggered");
+              fetchUsers();
+            }}
+            disabled={loadingUsers}
+            style={{
+              padding: "0.5rem 1rem",
+              backgroundColor: loadingUsers ? "#9ca3af" : "#3b82f6",
+              color: "white",
+              border: "none",
+              borderRadius: "0.375rem",
+              fontWeight: "bold",
+              fontSize: "0.9rem",
+              cursor: loadingUsers ? "not-allowed" : "pointer",
+            }}
+          >
+            {loadingUsers ? "Refreshing..." : "Refresh"}
+          </button>
+        </div>
         {loadingUsers ? (
           <div>Loading users...</div>
         ) : users.length === 0 ? (
