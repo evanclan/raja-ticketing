@@ -45,38 +45,24 @@ export default function SuperuserDashboard({ onSignOut }) {
     }
   };
 
-  // Fetch registered users (non-admin users)
+  // Fetch registered users (users with role 'user')
   const fetchUsers = async () => {
     setLoadingUsers(true);
     setAddError("");
 
     try {
-      // Only get users from the users table - this is the source of truth
-      const { data: usersFromTable, error: tableError } = await supabase
+      const { data, error } = await supabase
         .from("users")
         .select("*")
-        .neq("role", "admin")
+        .eq("role", "user")
         .order("created_at", { ascending: false });
 
-      if (tableError) {
-        console.log("Could not fetch from users table:", tableError);
-        setAddError("Error fetching users: " + tableError.message);
-        setLoadingUsers(false);
-        return;
-      }
-
-      console.log("Users from users table:", usersFromTable);
-
-      // Only show users that exist in the database
-      if (usersFromTable && usersFromTable.length > 0) {
-        console.log("Using users from users table with actual roles:", usersFromTable);
-        setUsers(usersFromTable);
+      if (error) {
+        setAddError("Error fetching users: " + error.message);
       } else {
-        console.log("No users found in database");
-        setUsers([]);
-        setAddError("No registered users found in database. Users must exist in the users table to be displayed.");
+        console.log("Users from users table:", data);
+        setUsers(data || []);
       }
-
     } catch (error) {
       console.error("Error in fetchUsers:", error);
       setAddError("Error fetching users: " + error.message);
