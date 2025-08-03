@@ -3,8 +3,7 @@ import { supabase } from "../../lib/supabase";
 import LoginForm from "./LoginForm";
 import RegisterForm from "./RegisterForm";
 import SuperuserDashboard from "../Superuser/SuperuserDashboard";
-
-
+import AdminLogin from "./AdminLogin";
 
 function SuperuserLogin({ onBack }) {
   const [username, setUsername] = useState("");
@@ -204,6 +203,7 @@ export default function AuthContainer({ onAuthSuccess }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [superuserMode, setSuperuserMode] = useState(false);
+  const [adminMode, setAdminMode] = useState(false);
 
   useEffect(() => {
     // Check for existing session
@@ -343,8 +343,14 @@ export default function AuthContainer({ onAuthSuccess }) {
   if (superuserMode) {
     return <SuperuserLogin onBack={() => setSuperuserMode(false)} />;
   }
-
-
+  if (adminMode) {
+    return (
+      <AdminLogin
+        onSuccess={handleAuthSuccess}
+        onBack={() => setAdminMode(false)}
+      />
+    );
+  }
 
   return (
     <div style={{ position: "relative" }}>
@@ -360,29 +366,55 @@ export default function AuthContainer({ onAuthSuccess }) {
         />
       )}
 
-      {/* Small Superuser Button - Bottom Left */}
-      <button
-        onClick={() => setSuperuserMode(true)}
+      {/* Superuser and Admin Buttons - Bottom Left */}
+      <div
         style={{
           position: "absolute",
           bottom: "-3rem",
           left: "0",
-          backgroundColor: "#6b7280",
-          color: "white",
-          border: "none",
-          borderRadius: "0.25rem",
-          fontSize: "0.75rem",
-          padding: "0.375rem 0.75rem",
-          cursor: "pointer",
-          opacity: "0.7",
-          transition: "opacity 0.2s",
-          touchAction: "manipulation", // Better touch handling on mobile
+          display: "flex",
+          gap: "0.5rem",
         }}
-        onMouseEnter={(e) => (e.target.style.opacity = "1")}
-        onMouseLeave={(e) => (e.target.style.opacity = "0.7")}
       >
-        superuser
-      </button>
+        <button
+          onClick={() => setSuperuserMode(true)}
+          style={{
+            backgroundColor: "#6b7280",
+            color: "white",
+            border: "none",
+            borderRadius: "0.25rem",
+            fontSize: "0.75rem",
+            padding: "0.375rem 0.75rem",
+            cursor: "pointer",
+            opacity: "0.7",
+            transition: "opacity 0.2s",
+            touchAction: "manipulation",
+          }}
+          onMouseEnter={(e) => (e.target.style.opacity = "1")}
+          onMouseLeave={(e) => (e.target.style.opacity = "0.7")}
+        >
+          superuser
+        </button>
+        <button
+          onClick={() => setAdminMode(true)}
+          style={{
+            backgroundColor: "#dc2626",
+            color: "white",
+            border: "none",
+            borderRadius: "0.25rem",
+            fontSize: "0.75rem",
+            padding: "0.375rem 0.75rem",
+            cursor: "pointer",
+            opacity: "0.7",
+            transition: "opacity 0.2s",
+            touchAction: "manipulation",
+          }}
+          onMouseEnter={(e) => (e.target.style.opacity = "1")}
+          onMouseLeave={(e) => (e.target.style.opacity = "0.7")}
+        >
+          admin
+        </button>
+      </div>
     </div>
   );
 }

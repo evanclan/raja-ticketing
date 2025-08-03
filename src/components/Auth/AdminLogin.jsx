@@ -1,24 +1,16 @@
 import { useState } from "react";
 import { supabase } from "../../lib/supabase";
-import SimpleConnectionIndicator from "../SimpleConnectionIndicator";
 
-export default function LoginForm({
-  onSuccess,
-  onSwitchToRegister,
-  hideGuest,
-  hideRegister,
-}) {
+export default function AdminLogin({ onSuccess, onBack }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
-    setMessage("");
 
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -27,17 +19,17 @@ export default function LoginForm({
       });
 
       if (error) {
-        setError(error.message);
+        setError("Invalid credentials");
       } else {
-        // Prevent admin login on user login page
+        // Check if user has admin role
         if (data.user.user_metadata?.role === "admin") {
-          setError("Admin accounts must use the Admin Login page.");
-          await supabase.auth.signOut();
-        } else {
-          setMessage("Login successful!");
           if (onSuccess) {
             onSuccess(data.user);
           }
+        } else {
+          setError("Access denied. Admin privileges required.");
+          // Sign out the user since they don't have admin access
+          await supabase.auth.signOut();
         }
       }
     } catch {
@@ -47,18 +39,32 @@ export default function LoginForm({
     }
   };
 
-  const handleGuestMode = () => {
-    if (onSwitchToRegister) {
-      onSwitchToRegister();
-    }
-  };
-
   return (
     <div
       className="test-card"
-      style={{ margin: "0 auto", position: "relative" }}
+      style={{
+        maxWidth: "400px",
+        margin: "4rem auto",
+        textAlign: "center",
+        position: "relative",
+      }}
     >
-      <SimpleConnectionIndicator />
+      <button
+        onClick={onBack}
+        style={{
+          position: "absolute",
+          left: 20,
+          top: 20,
+          background: "none",
+          border: "none",
+          color: "#3b82f6",
+          fontWeight: "500",
+          fontSize: "1.25rem",
+          cursor: "pointer",
+        }}
+      >
+        &larr;
+      </button>
       <h2
         style={{
           fontSize: "1.5rem",
@@ -68,14 +74,12 @@ export default function LoginForm({
           textAlign: "center",
         }}
       >
-        Welcome Back
+        Admin Login
       </h2>
-
       <form
         onSubmit={handleSubmit}
         style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
       >
-        {/* Email Field */}
         <div>
           <label
             htmlFor="email"
@@ -87,7 +91,7 @@ export default function LoginForm({
               marginBottom: "0.5rem",
             }}
           >
-            Email Address
+            Admin Email
           </label>
           <input
             id="email"
@@ -105,11 +109,9 @@ export default function LoginForm({
               outline: "none",
               transition: "border-color 0.2s",
             }}
-            placeholder="Enter your email"
+            placeholder="Enter admin email"
           />
         </div>
-
-        {/* Password Field */}
         <div>
           <label
             htmlFor="password"
@@ -121,7 +123,7 @@ export default function LoginForm({
               marginBottom: "0.5rem",
             }}
           >
-            Password
+            Admin Password
           </label>
           <input
             id="password"
@@ -139,11 +141,9 @@ export default function LoginForm({
               outline: "none",
               transition: "border-color 0.2s",
             }}
-            placeholder="Enter your password"
+            placeholder="Enter admin password"
           />
         </div>
-
-        {/* Error Message */}
         {error && (
           <div
             style={{
@@ -158,31 +158,13 @@ export default function LoginForm({
             {error}
           </div>
         )}
-
-        {/* Success Message */}
-        {message && (
-          <div
-            style={{
-              padding: "0.75rem",
-              backgroundColor: "#f0fdf4",
-              color: "#166534",
-              borderRadius: "0.375rem",
-              fontSize: "0.875rem",
-              border: "1px solid #bbf7d0",
-            }}
-          >
-            {message}
-          </div>
-        )}
-
-        {/* Submit Button */}
         <button
           type="submit"
           disabled={loading}
           style={{
             width: "100%",
             padding: "0.75rem",
-            backgroundColor: loading ? "#9ca3af" : "#3b82f6",
+            backgroundColor: loading ? "#9ca3af" : "#dc2626",
             color: "white",
             border: "none",
             borderRadius: "0.375rem",
@@ -192,59 +174,9 @@ export default function LoginForm({
             transition: "background-color 0.2s",
           }}
         >
-          {loading ? "Signing in..." : "Sign In"}
+          {loading ? "Signing in..." : "Admin Sign In"}
         </button>
-
-        {/* Guest Mode Button */}
-        {!hideGuest && (
-          <button
-            type="button"
-            onClick={handleGuestMode}
-            style={{
-              width: "100%",
-              padding: "0.75rem",
-              backgroundColor: "transparent",
-              color: "#6b7280",
-              border: "1px solid #d1d5db",
-              borderRadius: "0.375rem",
-              fontSize: "1rem",
-              fontWeight: "500",
-              cursor: "pointer",
-              transition: "all 0.2s",
-            }}
-          >
-            Continue as Guest
-          </button>
-        )}
       </form>
-
-      {/* Additional Links */}
-      {!hideRegister && (
-        <div
-          style={{
-            marginTop: "1.5rem",
-            textAlign: "center",
-            fontSize: "0.875rem",
-            color: "#6b7280",
-          }}
-        >
-          <p>
-            Don't have an account?{" "}
-            <button
-              onClick={handleGuestMode}
-              style={{
-                background: "none",
-                border: "none",
-                color: "#3b82f6",
-                cursor: "pointer",
-                textDecoration: "underline",
-              }}
-            >
-              Register here
-            </button>
-          </p>
-        </div>
-      )}
     </div>
   );
 }
