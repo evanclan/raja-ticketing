@@ -23,14 +23,14 @@ export default function SuperuserDashboard({ onSignOut }) {
   const fetchAdmins = async () => {
     setLoadingAdmins(true);
     setAddError("");
-    
+
     try {
       const { data, error } = await supabase
         .from("users")
         .select("*")
         .eq("role", "admin")
         .order("created_at", { ascending: false });
-        
+
       if (error) {
         setAddError("Error fetching admins: " + error.message);
       } else {
@@ -138,23 +138,115 @@ export default function SuperuserDashboard({ onSignOut }) {
     setAddSuccess("");
 
     try {
-      // Find user by email and delete
-      const { data: users, error: findError } =
+      // First, find the admin in the users table to get their ID
+      const { data: adminData, error: findError } = await supabase
+        .from("users")
+        .select("id, email")
+        .eq("email", adminEmail)
+        .eq("role", "admin")
+        .single();
+
+      if (findError || !adminData) {
+        setAddError("Admin not found in database");
+        return;
+      }
+
+      const adminId = adminData.id;
+
+      // Delete from all related tables first (due to foreign key constraints)
+
+      // Delete from event_checkins table
+      const { error: checkinsError } = await supabase
+        .from("event_checkins")
+        .delete()
+        .eq("user_id", adminId);
+
+      if (checkinsError) {
+        console.log("Could not delete from event_checkins:", checkinsError);
+      }
+
+      // Delete from event_participants table
+      const { error: participantsError } = await supabase
+        .from("event_participants")
+        .delete()
+        .eq("user_id", adminId);
+
+      if (participantsError) {
+        console.log(
+          "Could not delete from event_participants:",
+          participantsError
+        );
+      }
+
+      // Delete from registrations table
+      const { error: registrationsError } = await supabase
+        .from("registrations")
+        .delete()
+        .eq("user_id", adminId);
+
+      if (registrationsError) {
+        console.log("Could not delete from registrations:", registrationsError);
+      }
+
+      // Delete from family_members table
+      const { error: familyError } = await supabase
+        .from("family_members")
+        .delete()
+        .eq("user_id", adminId);
+
+      if (familyError) {
+        console.log("Could not delete from family_members:", familyError);
+      }
+
+      // Delete from superusers table if exists
+      const { error: superuserError } = await supabase
+        .from("superusers")
+        .delete()
+        .eq("user_id", adminId);
+
+      if (superuserError) {
+        console.log("Could not delete from superusers:", superuserError);
+      }
+
+      // Delete from users table
+      const { error: userError } = await supabase
+        .from("users")
+        .delete()
+        .eq("id", adminId);
+
+      if (userError) {
+        setAddError(
+          "Failed to delete admin from users table: " + userError.message
+        );
+        return;
+      }
+
+      // Finally, delete from auth system
+      const { data: authUsers, error: listError } =
         await supabase.auth.admin.listUsers();
-      if (findError) throw findError;
+      if (listError) {
+        setAddError("Failed to list auth users: " + listError.message);
+        return;
+      }
 
-      const userToDelete = users.users.find((u) => u.email === adminEmail);
-      if (!userToDelete) throw new Error("User not found");
+      const userToDelete = authUsers.users.find((u) => u.email === adminEmail);
+      if (!userToDelete) {
+        setAddError("Admin not found in auth system");
+        return;
+      }
 
-      // Delete from auth and public tables
-      const { error: deleteError } = await supabase.auth.admin.deleteUser(
+      const { error: deleteAuthError } = await supabase.auth.admin.deleteUser(
         userToDelete.id
       );
 
-      if (deleteError) {
-        setAddError("Failed to delete admin: " + deleteError.message);
+      if (deleteAuthError) {
+        setAddError(
+          "Failed to delete admin from auth: " + deleteAuthError.message
+        );
       } else {
-        setAddSuccess(`Admin ${adminEmail} deleted successfully!`);
+        setAddSuccess(
+          `Admin ${adminEmail} deleted successfully from all systems!`
+        );
         fetchAdmins(); // Refresh the admin list
       }
     } catch (error) {
@@ -173,14 +265,51 @@ export default function SuperuserDashboard({ onSignOut }) {
     setAddError("");
 
     try {
-      // Delete from registrations table first (foreign key constraint)
-      const { error: regError } = await supabase
+      // Get user details first
+      const { data: userData, error: userFindError } = await supabase
+        .from("users")
+        .select("id, email")
+        .eq("id", userId)
+        .single();
+
+      if (userFindError || !userData) {
+        setAddError("User not found in database");
+        return;
+      }
+
+      // Delete from all related tables first (due to foreign key constraints)
+
+      // Delete from event_checkins table
+      const { error: checkinsError } = await supabase
+        .from("event_checkins")
+        .delete()
+        .eq("user_id", userId);
+
+      if (checkinsError) {
+        console.log("Could not delete from event_checkins:", checkinsError);
+      }
+
+      // Delete from event_participants table
+      const { error: participantsError } = await supabase
+        .from("event_participants")
+        .delete()
+        .eq("user_id", userId);
+
+      if (participantsError) {
+        console.log(
+          "Could not delete from event_participants:",
+          participantsError
+        );
+      }
+
+      // Delete from registrations table
+      const { error: registrationsError } = await supabase
         .from("registrations")
         .delete()
         .eq("user_id", userId);
 
-      if (regError) {
-        console.log("Could not delete from registrations:", regError);
+      if (registrationsError) {
+        console.log("Could not delete from registrations:", registrationsError);
       }
 
       // Delete from family_members table
@@ -193,29 +322,53 @@ export default function SuperuserDashboard({ onSignOut }) {
         console.log("Could not delete from family_members:", familyError);
       }
 
-      // Delete from users table (if it exists)
+      // Delete from superusers table if exists
+      const { error: superuserError } = await supabase
+        .from("superusers")
+        .delete()
+        .eq("user_id", userId);
+
+      if (superuserError) {
+        console.log("Could not delete from superusers:", superuserError);
+      }
+
+      // Delete from users table
       const { error: userError } = await supabase
         .from("users")
         .delete()
         .eq("id", userId);
 
       if (userError) {
-        console.log("Could not delete from users table:", userError);
+        setAddError(
+          "Failed to delete user from users table: " + userError.message
+        );
+        return;
       }
 
-      // Since we can't delete from auth system directly due to permissions,
-      // we'll create a "deleted_users" table entry or mark them as inactive
-      // For now, we'll just remove their data from our tables and refresh the list
-      
-      // Remove from local state
-      setUsers(users.filter((user) => user.id !== userId));
-      setAddSuccess("User data deleted successfully! User removed from all app data.");
-      
-      // Refresh the user list to ensure consistency
-      setTimeout(() => {
-        fetchUsers();
-      }, 1000);
-      
+      // Delete from auth system
+      const { data: authUsers, error: listError } =
+        await supabase.auth.admin.listUsers();
+      if (listError) {
+        setAddError("Failed to list auth users: " + listError.message);
+        return;
+      }
+
+      const userToDelete = authUsers.users.find((u) => u.id === userId);
+      if (!userToDelete) {
+        console.log(
+          "User not found in auth system, but data deleted from database"
+        );
+      } else {
+        const { error: deleteAuthError } = await supabase.auth.admin.deleteUser(
+          userId
+        );
+        if (deleteAuthError) {
+          console.log("Could not delete from auth system:", deleteAuthError);
+        }
+      }
+
+      setAddSuccess("User deleted successfully from all systems!");
+      fetchUsers(); // Refresh the user list
     } catch (error) {
       setAddError("Error deleting user: " + error.message);
     } finally {
@@ -404,14 +557,16 @@ export default function SuperuserDashboard({ onSignOut }) {
                   </td>
                   <td style={{ padding: "0.5rem" }}>{admin.email}</td>
                   <td style={{ padding: "0.5rem" }}>
-                    <span style={{
-                      backgroundColor: "#3b82f6",
-                      color: "white",
-                      padding: "0.25rem 0.5rem",
-                      borderRadius: "0.25rem",
-                      fontSize: "0.75rem",
-                      fontWeight: "bold"
-                    }}>
+                    <span
+                      style={{
+                        backgroundColor: "#3b82f6",
+                        color: "white",
+                        padding: "0.25rem 0.5rem",
+                        borderRadius: "0.25rem",
+                        fontSize: "0.75rem",
+                        fontWeight: "bold",
+                      }}
+                    >
                       {admin.role || "admin"}
                     </span>
                   </td>
@@ -480,14 +635,16 @@ export default function SuperuserDashboard({ onSignOut }) {
                   </td>
                   <td style={{ padding: "0.5rem" }}>{user.email}</td>
                   <td style={{ padding: "0.5rem" }}>
-                    <span style={{
-                      backgroundColor: "#10b981",
-                      color: "white",
-                      padding: "0.25rem 0.5rem",
-                      borderRadius: "0.25rem",
-                      fontSize: "0.75rem",
-                      fontWeight: "bold"
-                    }}>
+                    <span
+                      style={{
+                        backgroundColor: "#10b981",
+                        color: "white",
+                        padding: "0.25rem 0.5rem",
+                        borderRadius: "0.25rem",
+                        fontSize: "0.75rem",
+                        fontWeight: "bold",
+                      }}
+                    >
                       {user.role || "user"}
                     </span>
                   </td>

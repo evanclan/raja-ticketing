@@ -52,3 +52,42 @@ FROM auth.users auth
 LEFT JOIN public.users public_users ON auth.id = public_users.id
 WHERE auth.email != 'superuser@example.com'
 ORDER BY auth.created_at DESC; 
+
+-- Drop the restrictive policy
+DROP POLICY IF EXISTS "Admins can view all users" ON users;
+
+-- Create a new policy that allows authenticated users to read all users
+CREATE POLICY "Authenticated users can view all users" ON users
+  FOR SELECT USING (auth.role() = 'authenticated');
+
+-- Also add a policy for superusers to manage all users
+CREATE POLICY "Superusers can manage all users" ON users
+  FOR ALL USING (auth.role() = 'authenticated');
+
+-- First, let's see what policies exist
+SELECT schemaname, tablename, policyname, permissive, roles, cmd, qual 
+FROM pg_policies 
+WHERE tablename = 'users';
+
+-- Drop ALL existing policies on users table
+DROP POLICY IF EXISTS "Users can view their own profile" ON users;
+DROP POLICY IF EXISTS "Users can update their own profile" ON users;
+DROP POLICY IF EXISTS "Admins can view all users" ON users;
+DROP POLICY IF EXISTS "Authenticated users can view all users" ON users;
+DROP POLICY IF EXISTS "Superusers can manage all users" ON users;
+
+-- Create a simple policy that allows all authenticated users to read the users table
+CREATE POLICY "Allow authenticated users to read users" ON users
+  FOR SELECT TO authenticated USING (true);
+
+-- Create a policy for users to update their own profile
+CREATE POLICY "Users can update their own profile" ON users
+  FOR UPDATE TO authenticated USING (auth.uid() = id);
+
+-- Create a policy for inserting new users
+CREATE POLICY "Allow inserting users" ON users
+  FOR INSERT TO authenticated WITH CHECK (true);
+
+-- Create a policy for deleting users (for admin functionality)
+CREATE POLICY "Allow deleting users" ON users
+  FOR DELETE TO authenticated USING (true);
