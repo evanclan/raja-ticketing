@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import QrScanner from "qr-scanner";
 import { supabase } from "../../lib/supabase";
 
 export default function QRScanner({ eventId, isOpen, onClose }) {
@@ -8,8 +7,26 @@ export default function QRScanner({ eventId, isOpen, onClose }) {
   const [error, setError] = useState("");
   const [checkInResult, setCheckInResult] = useState(null);
   const [stats, setStats] = useState(null);
+  const [QrScanner, setQrScanner] = useState(null);
   const videoRef = useRef(null);
   const scannerRef = useRef(null);
+
+  // Load QrScanner dynamically
+  useEffect(() => {
+    const loadQrScanner = async () => {
+      try {
+        const QrScannerModule = await import("qr-scanner");
+        setQrScanner(() => QrScannerModule.default);
+      } catch (err) {
+        console.error("Failed to load QR Scanner:", err);
+        setError("Failed to load QR Scanner module");
+      }
+    };
+    
+    if (isOpen) {
+      loadQrScanner();
+    }
+  }, [isOpen]);
 
   const fetchStats = useCallback(async () => {
     try {
@@ -266,6 +283,11 @@ export default function QRScanner({ eventId, isOpen, onClose }) {
     try {
       setError("");
 
+      if (!QrScanner) {
+        setError("QR Scanner module not loaded yet");
+        return;
+      }
+
       if (scannerRef.current) {
         scannerRef.current.destroy();
       }
@@ -287,7 +309,7 @@ export default function QRScanner({ eventId, isOpen, onClose }) {
       console.error("Scanner error:", err);
       setError("Failed to start camera. Please check permissions.");
     }
-  }, [handleScanResult]);
+  }, [handleScanResult, QrScanner]);
 
   useEffect(() => {
     if (isOpen && eventId) {
@@ -296,13 +318,13 @@ export default function QRScanner({ eventId, isOpen, onClose }) {
   }, [isOpen, eventId, fetchStats]);
 
   useEffect(() => {
-    if (isOpen && videoRef.current) {
+    if (isOpen && videoRef.current && QrScanner) {
       startScanner();
     }
     return () => {
       stopScanner();
     };
-  }, [isOpen, startScanner]);
+  }, [isOpen, startScanner, QrScanner]);
 
   const stopScanner = () => {
     if (scannerRef.current) {

@@ -15,5 +15,11 @@ export default defineConfig({
         assetFileNames: `assets/[name]-[hash].[ext]`
       }
     }
+  },
+  optimizeDeps: {
+    include: ['qr-scanner', 'qrcode']
+  },
+  worker: {
+    format: 'es'
   }
 });
