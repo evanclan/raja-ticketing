@@ -58,7 +58,7 @@ function AdminLoginForm({ onSuccess, onBack, onSuperuser }) {
       >
         Admin Login
       </h2>
-      <LoginForm onSuccess={onSuccess} hideGuest hideRegister hideAdmin />
+      <LoginForm onSuccess={onSuccess} hideGuest hideRegister />
     </div>
   );
 }
@@ -413,12 +413,11 @@ export default function AuthContainer({ onAuthSuccess }) {
   }
 
   return (
-    <div>
+    <div style={{ position: "relative" }}>
       {isLogin ? (
         <LoginForm
           onSuccess={handleAuthSuccess}
           onSwitchToRegister={() => setIsLogin(false)}
-          onAdminLogin={() => setAdminMode(true)}
         />
       ) : (
         <RegisterForm
@@ -426,6 +425,30 @@ export default function AuthContainer({ onAuthSuccess }) {
           onSwitchToLogin={() => setIsLogin(true)}
         />
       )}
+
+      {/* Small Superuser Button - Bottom Left */}
+      <button
+        onClick={() => setAdminMode(true)}
+        style={{
+          position: "absolute",
+          bottom: "-3rem",
+          left: "0",
+          backgroundColor: "#6b7280",
+          color: "white",
+          border: "none",
+          borderRadius: "0.25rem",
+          fontSize: "0.75rem",
+          padding: "0.375rem 0.75rem",
+          cursor: "pointer",
+          opacity: "0.7",
+          transition: "opacity 0.2s",
+          touchAction: "manipulation", // Better touch handling on mobile
+        }}
+        onMouseEnter={(e) => (e.target.style.opacity = "1")}
+        onMouseLeave={(e) => (e.target.style.opacity = "0.7")}
+      >
+        superuser
+      </button>
     </div>
   );
 }

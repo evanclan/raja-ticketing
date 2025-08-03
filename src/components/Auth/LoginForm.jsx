@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { supabase } from "../../lib/supabase";
+import SimpleConnectionIndicator from "../SimpleConnectionIndicator";
 
 export default function LoginForm({
   onSuccess,
   onSwitchToRegister,
-  onAdminLogin,
   hideGuest,
   hideRegister,
-  hideAdmin,
 }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -49,7 +48,11 @@ export default function LoginForm({
   };
 
   return (
-    <div className="test-card" style={{ maxWidth: "400px", margin: "0 auto" }}>
+    <div
+      className="test-card"
+      style={{ margin: "0 auto", position: "relative" }}
+    >
+      <SimpleConnectionIndicator />
       <h2
         style={{
           fontSize: "1.5rem",
@@ -234,29 +237,6 @@ export default function LoginForm({
               Register here
             </button>
           </p>
-        </div>
-      )}
-
-      {/* Sign in as Admin Button */}
-      {!hideAdmin && (
-        <div style={{ marginTop: "2rem", textAlign: "center" }}>
-          <button
-            type="button"
-            onClick={onAdminLogin}
-            style={{
-              padding: "0.75rem 1.5rem",
-              backgroundColor: "#f59e0b",
-              color: "white",
-              border: "none",
-              borderRadius: "0.375rem",
-              fontSize: "1rem",
-              fontWeight: "500",
-              cursor: "pointer",
-              transition: "background-color 0.2s",
-            }}
-          >
-            Sign in as Admin
-          </button>
         </div>
       )}
     </div>

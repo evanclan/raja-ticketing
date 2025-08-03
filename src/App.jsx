@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { supabase } from "./lib/supabase";
-import ConnectionTest from "./components/ConnectionTest";
 import AuthContainer from "./components/Auth/AuthContainer";
 import AdminDashboard from "./components/Admin/AdminDashboard";
 import UserDashboard from "./components/User/UserDashboard";
@@ -32,17 +31,18 @@ function App() {
       style={{
         minHeight: "100vh",
         backgroundColor: "#f3f4f6",
-        padding: "2rem 0",
+        padding: "1rem 0",
       }}
     >
       <div className="container">
         <h1
           style={{
-            fontSize: "1.875rem",
+            fontSize: window.innerWidth < 640 ? "1.5rem" : "1.875rem",
             fontWeight: "bold",
             textAlign: "center",
             color: "#1f2937",
             marginBottom: "2rem",
+            padding: "0 1rem",
           }}
         >
           RaJA Ticketing System
@@ -122,14 +122,14 @@ function App() {
             {/* Show appropriate view based on currentView state */}
             {currentUser.user_metadata?.role === "admin" ? (
               currentView === "event-management" ? (
-                <EventManagementPage 
+                <EventManagementPage
                   eventId={selectedEventId}
                   onBack={handleBackToDashboard}
                   currentUser={currentUser}
                 />
               ) : (
-                <AdminDashboard 
-                  user={currentUser} 
+                <AdminDashboard
+                  user={currentUser}
                   onNavigateToEventManagement={handleNavigateToEventManagement}
                 />
               )
@@ -146,9 +146,24 @@ function App() {
               flexDirection: "column",
               gap: "2rem",
               alignItems: "center",
+              justifyContent: "center",
+              minHeight: "60vh",
             }}
           >
-            <ConnectionTest />
+            <div style={{ textAlign: "center" }}>
+              <h2
+                style={{
+                  fontSize: "1.25rem",
+                  color: "#6b7280",
+                  marginBottom: "1rem",
+                }}
+              >
+                Welcome to RaJA Ticketing System
+              </h2>
+              <p style={{ color: "#9ca3af", marginBottom: "2rem" }}>
+                Please sign in to continue
+              </p>
+            </div>
             <button
               onClick={() => setShowAuth(true)}
               style={{
