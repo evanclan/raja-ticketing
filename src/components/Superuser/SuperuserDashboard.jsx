@@ -127,9 +127,12 @@ export default function SuperuserDashboard({ onSignOut }) {
 
   // Delete admin using secure Edge Function
   const handleDeleteAdmin = async (adminEmail) => {
+    console.log("🔄 Starting delete admin process for email:", adminEmail);
+    
     if (
       !window.confirm(`Are you sure you want to delete admin: ${adminEmail}?`)
     ) {
+      console.log("❌ User cancelled admin deletion");
       return;
     }
 
@@ -138,6 +141,7 @@ export default function SuperuserDashboard({ onSignOut }) {
     setAddSuccess("");
 
     try {
+      console.log("🔍 Looking up admin details...");
       // First, find the admin in the users table to get their ID
       const { data: adminData, error: findError } = await supabase
         .from("users")
@@ -147,14 +151,17 @@ export default function SuperuserDashboard({ onSignOut }) {
         .single();
 
       if (findError || !adminData) {
+        console.log("❌ Admin not found:", findError);
         setAddError("Admin not found in database");
         return;
       }
 
+      console.log("✅ Admin found:", adminData);
       const adminId = adminData.id;
 
       // Delete from all related tables first (due to foreign key constraints)
 
+      console.log("🗑️ Deleting from registrations table...");
       // Delete from registrations table
       const { error: registrationsError } = await supabase
         .from("registrations")
@@ -162,9 +169,12 @@ export default function SuperuserDashboard({ onSignOut }) {
         .eq("user_id", adminId);
 
       if (registrationsError) {
-        console.log("Could not delete from registrations:", registrationsError);
+        console.log("❌ Could not delete from registrations:", registrationsError);
+      } else {
+        console.log("✅ Deleted from registrations successfully");
       }
 
+      console.log("🗑️ Deleting from family_members table...");
       // Delete from family_members table
       const { error: familyError } = await supabase
         .from("family_members")
@@ -172,9 +182,12 @@ export default function SuperuserDashboard({ onSignOut }) {
         .eq("user_id", adminId);
 
       if (familyError) {
-        console.log("Could not delete from family_members:", familyError);
+        console.log("❌ Could not delete from family_members:", familyError);
+      } else {
+        console.log("✅ Deleted from family_members successfully");
       }
 
+      console.log("🗑️ Deleting from users table...");
       // Delete from users table
       const { error: userError } = await supabase
         .from("users")
@@ -182,27 +195,36 @@ export default function SuperuserDashboard({ onSignOut }) {
         .eq("id", adminId);
 
       if (userError) {
+        console.log("❌ Failed to delete from users table:", userError);
         setAddError(
           "Failed to delete admin from users table: " + userError.message
         );
         return;
+      } else {
+        console.log("✅ Deleted from users table successfully");
       }
 
       // Note: Auth deletion requires special permissions and is handled separately
       // The user will be removed from the application data but may still exist in auth
+      console.log("✅ Admin deletion completed successfully!");
       setAddSuccess(
         `Admin ${adminEmail} deleted successfully from application data!`
       );
       fetchAdmins(); // Refresh the admin list
     } catch (error) {
+      console.log("❌ Error in delete admin process:", error);
       setAddError("Error deleting admin: " + error.message);
     } finally {
+      console.log("🏁 Delete admin process finished");
       setAddLoading(false);
     }
   };
 
   const handleDeleteUser = async (userId) => {
+    console.log("🔄 Starting delete user process for ID:", userId);
+    
     if (!window.confirm(`Are you sure you want to delete this user?`)) {
+      console.log("❌ User cancelled deletion");
       return;
     }
 
@@ -210,6 +232,7 @@ export default function SuperuserDashboard({ onSignOut }) {
     setAddError("");
 
     try {
+      console.log("🔍 Looking up user details...");
       // Get user details first
       const { data: userData, error: userFindError } = await supabase
         .from("users")
@@ -218,12 +241,16 @@ export default function SuperuserDashboard({ onSignOut }) {
         .single();
 
       if (userFindError || !userData) {
+        console.log("❌ User not found:", userFindError);
         setAddError("User not found in database");
         return;
       }
 
+      console.log("✅ User found:", userData);
+
       // Delete from all related tables first (due to foreign key constraints)
 
+      console.log("🗑️ Deleting from registrations table...");
       // Delete from registrations table
       const { error: registrationsError } = await supabase
         .from("registrations")
@@ -231,9 +258,12 @@ export default function SuperuserDashboard({ onSignOut }) {
         .eq("user_id", userId);
 
       if (registrationsError) {
-        console.log("Could not delete from registrations:", registrationsError);
+        console.log("❌ Could not delete from registrations:", registrationsError);
+      } else {
+        console.log("✅ Deleted from registrations successfully");
       }
 
+      console.log("🗑️ Deleting from family_members table...");
       // Delete from family_members table
       const { error: familyError } = await supabase
         .from("family_members")
@@ -241,9 +271,12 @@ export default function SuperuserDashboard({ onSignOut }) {
         .eq("user_id", userId);
 
       if (familyError) {
-        console.log("Could not delete from family_members:", familyError);
+        console.log("❌ Could not delete from family_members:", familyError);
+      } else {
+        console.log("✅ Deleted from family_members successfully");
       }
 
+      console.log("🗑️ Deleting from users table...");
       // Delete from users table
       const { error: userError } = await supabase
         .from("users")
@@ -251,19 +284,25 @@ export default function SuperuserDashboard({ onSignOut }) {
         .eq("id", userId);
 
       if (userError) {
+        console.log("❌ Failed to delete from users table:", userError);
         setAddError(
           "Failed to delete user from users table: " + userError.message
         );
         return;
+      } else {
+        console.log("✅ Deleted from users table successfully");
       }
 
       // Note: Auth deletion requires special permissions and is handled separately
       // The user will be removed from the application data but may still exist in auth
+      console.log("✅ User deletion completed successfully!");
       setAddSuccess("User deleted successfully from application data!");
       fetchUsers(); // Refresh the user list
     } catch (error) {
+      console.log("❌ Error in delete user process:", error);
       setAddError("Error deleting user: " + error.message);
     } finally {
+      console.log("🏁 Delete user process finished");
       setLoadingUsers(false);
     }
   };
