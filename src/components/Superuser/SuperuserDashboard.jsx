@@ -248,49 +248,63 @@ export default function SuperuserDashboard({ onSignOut }) {
 
       console.log("✅ User found:", userData);
 
-      // Delete from all related tables first (due to foreign key constraints)
-
-      console.log("🗑️ Deleting from registrations table...");
-      // Delete from registrations table
-      const { error: registrationsError } = await supabase
-        .from("registrations")
-        .delete()
-        .eq("user_id", userId);
-
-      if (registrationsError) {
-        console.log("❌ Could not delete from registrations:", registrationsError);
-      } else {
-        console.log("✅ Deleted from registrations successfully");
-      }
-
-      console.log("🗑️ Deleting from family_members table...");
-      // Delete from family_members table
-      const { error: familyError } = await supabase
-        .from("family_members")
-        .delete()
-        .eq("user_id", userId);
-
-      if (familyError) {
-        console.log("❌ Could not delete from family_members:", familyError);
-      } else {
-        console.log("✅ Deleted from family_members successfully");
-      }
-
-      console.log("🗑️ Deleting from users table...");
-      // Delete from users table
-      const { error: userError } = await supabase
+      // Try direct deletion from users table first
+      console.log("🗑️ Attempting direct deletion from users table...");
+      const { error: directDeleteError } = await supabase
         .from("users")
         .delete()
         .eq("id", userId);
 
-      if (userError) {
-        console.log("❌ Failed to delete from users table:", userError);
-        setAddError(
-          "Failed to delete user from users table: " + userError.message
-        );
-        return;
+      if (directDeleteError) {
+        console.log("❌ Direct deletion failed:", directDeleteError);
+        
+        // If direct deletion fails, try deleting from related tables first
+        console.log("🔄 Trying to delete from related tables first...");
+        
+        // Delete from registrations table
+        console.log("🗑️ Deleting from registrations table...");
+        const { error: registrationsError } = await supabase
+          .from("registrations")
+          .delete()
+          .eq("user_id", userId);
+
+        if (registrationsError) {
+          console.log("❌ Could not delete from registrations:", registrationsError);
+        } else {
+          console.log("✅ Deleted from registrations successfully");
+        }
+
+        // Delete from family_members table
+        console.log("🗑️ Deleting from family_members table...");
+        const { error: familyError } = await supabase
+          .from("family_members")
+          .delete()
+          .eq("user_id", userId);
+
+        if (familyError) {
+          console.log("❌ Could not delete from family_members:", familyError);
+        } else {
+          console.log("✅ Deleted from family_members successfully");
+        }
+
+        // Try deleting from users table again
+        console.log("🗑️ Trying to delete from users table again...");
+        const { error: userError } = await supabase
+          .from("users")
+          .delete()
+          .eq("id", userId);
+
+        if (userError) {
+          console.log("❌ Failed to delete from users table:", userError);
+          setAddError(
+            "Failed to delete user from users table: " + userError.message
+          );
+          return;
+        } else {
+          console.log("✅ Deleted from users table successfully");
+        }
       } else {
-        console.log("✅ Deleted from users table successfully");
+        console.log("✅ Direct deletion from users table successful!");
       }
 
       // Note: Auth deletion requires special permissions and is handled separately
