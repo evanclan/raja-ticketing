@@ -54,38 +54,38 @@ export default function CreateEventForm({ onEventCreated, onCancel }) {
 
   const validateForm = () => {
     if (!formData.title.trim()) {
-      setError("Event title is required");
+      setError("イベントタイトルは必須です");
       return false;
     }
     if (!formData.description.trim()) {
-      setError("Event description is required");
+      setError("イベントの説明は必須です");
       return false;
     }
     if (!formData.event_date) {
-      setError("Event date is required");
+      setError("イベント日は必須です");
       return false;
     }
     if (!formData.event_time) {
-      setError("Event time is required");
+      setError("イベント時間は必須です");
       return false;
     }
     if (!formData.location.trim()) {
-      setError("Event location is required");
+      setError("イベント会場は必須です");
       return false;
     }
     if (!formData.price || parseFloat(formData.price) < 0) {
-      setError("Valid price is required");
+      setError("有効な価格が必要です");
       return false;
     }
     if (!formData.capacity || parseInt(formData.capacity) < 1) {
-      setError("Valid capacity is required");
+      setError("有効な定員が必要です");
       return false;
     }
     if (formData.start_registration && formData.end_registration) {
       const startDate = new Date(formData.start_registration);
       const endDate = new Date(formData.end_registration);
       if (startDate >= endDate) {
-        setError("End registration date must be after start registration date");
+        setError("登録終了日は登録開始日より後である必要があります");
         return false;
       }
     }
@@ -136,9 +136,9 @@ export default function CreateEventForm({ onEventCreated, onCancel }) {
         .single();
 
       if (error) {
-        setError("Error creating event: " + error.message);
+        setError("イベント作成エラー: " + error.message);
       } else {
-        setSuccess("Event created successfully!");
+        setSuccess("イベントが正常に作成されました！");
         onEventCreated(data);
         // Reset form
         setFormData({
@@ -164,7 +164,7 @@ export default function CreateEventForm({ onEventCreated, onCancel }) {
         });
       }
     } catch (err) {
-      setError("An unexpected error occurred. Please try again.");
+      setError("予期しないエラーが発生しました。もう一度お試しください。");
     } finally {
       setLoading(false);
     }
@@ -190,7 +190,7 @@ export default function CreateEventForm({ onEventCreated, onCancel }) {
           textAlign: "center",
         }}
       >
-        Create New Event
+        新しいイベントを作成
       </h3>
 
       <form

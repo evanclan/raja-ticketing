@@ -74,7 +74,7 @@ export default function AdminLogin({ onSuccess, onBack }) {
           textAlign: "center",
         }}
       >
-        Admin Login
+        管理者ログイン
       </h2>
       <form
         onSubmit={handleSubmit}
@@ -91,7 +91,7 @@ export default function AdminLogin({ onSuccess, onBack }) {
               marginBottom: "0.5rem",
             }}
           >
-            Admin Email
+            管理者メールアドレス
           </label>
           <input
             id="email"
@@ -109,7 +109,7 @@ export default function AdminLogin({ onSuccess, onBack }) {
               outline: "none",
               transition: "border-color 0.2s",
             }}
-            placeholder="Enter admin email"
+            placeholder="管理者メールアドレスを入力してください"
           />
         </div>
         <div>
@@ -123,7 +123,7 @@ export default function AdminLogin({ onSuccess, onBack }) {
               marginBottom: "0.5rem",
             }}
           >
-            Admin Password
+            管理者パスワード
           </label>
           <input
             id="password"
@@ -141,7 +141,7 @@ export default function AdminLogin({ onSuccess, onBack }) {
               outline: "none",
               transition: "border-color 0.2s",
             }}
-            placeholder="Enter admin password"
+            placeholder="管理者パスワードを入力してください"
           />
         </div>
         {error && (
@@ -174,7 +174,7 @@ export default function AdminLogin({ onSuccess, onBack }) {
             transition: "background-color 0.2s",
           }}
         >
-          {loading ? "Signing in..." : "Admin Sign In"}
+          {loading ? "ログイン中..." : "管理者ログイン"}
         </button>
       </form>
     </div>

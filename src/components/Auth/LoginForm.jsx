@@ -68,7 +68,7 @@ export default function LoginForm({
           textAlign: "center",
         }}
       >
-        Welcome Back
+        おかえりなさい
       </h2>
 
       <form
@@ -87,7 +87,7 @@ export default function LoginForm({
               marginBottom: "0.5rem",
             }}
           >
-            Email Address
+            メールアドレス
           </label>
           <input
             id="email"
@@ -105,7 +105,7 @@ export default function LoginForm({
               outline: "none",
               transition: "border-color 0.2s",
             }}
-            placeholder="Enter your email"
+            placeholder="メールアドレスを入力してください"
           />
         </div>
 
@@ -121,7 +121,7 @@ export default function LoginForm({
               marginBottom: "0.5rem",
             }}
           >
-            Password
+            パスワード
           </label>
           <input
             id="password"
@@ -139,7 +139,7 @@ export default function LoginForm({
               outline: "none",
               transition: "border-color 0.2s",
             }}
-            placeholder="Enter your password"
+            placeholder="パスワードを入力してください"
           />
         </div>
 
@@ -192,7 +192,7 @@ export default function LoginForm({
             transition: "background-color 0.2s",
           }}
         >
-          {loading ? "Signing in..." : "Sign In"}
+          {loading ? "ログイン中..." : "ログイン"}
         </button>
 
         {/* Guest Mode Button */}
@@ -213,7 +213,7 @@ export default function LoginForm({
               transition: "all 0.2s",
             }}
           >
-            Continue as Guest
+            ゲストとして続行
           </button>
         )}
       </form>
@@ -229,7 +229,7 @@ export default function LoginForm({
           }}
         >
           <p>
-            Don't have an account?{" "}
+            アカウントをお持ちでない方は{" "}
             <button
               onClick={handleGuestMode}
               style={{
@@ -240,7 +240,7 @@ export default function LoginForm({
                 textDecoration: "underline",
               }}
             >
-              Register here
+              ここで登録
             </button>
           </p>
         </div>

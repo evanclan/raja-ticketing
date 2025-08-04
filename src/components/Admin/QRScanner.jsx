@@ -19,7 +19,7 @@ export default function QRScanner({ eventId, isOpen, onClose }) {
         setQrScanner(() => QrScannerModule.default);
       } catch (err) {
         console.error("Failed to load QR Scanner:", err);
-        setError("Failed to load QR Scanner module");
+        setError("QRスキャナーモジュールの読み込みに失敗しました");
       }
     };
     
@@ -76,8 +76,8 @@ export default function QRScanner({ eventId, isOpen, onClose }) {
           console.log("❌ Failed to parse QR data:", qrData);
           setCheckInResult({
             success: false,
-            message: "Invalid QR code format",
-            error: "QR code data is not valid JSON",
+            message: "無効なQRコード形式",
+            error: "QRコードデータが有効なJSONではありません",
           });
           return;
         }
@@ -88,8 +88,8 @@ export default function QRScanner({ eventId, isOpen, onClose }) {
         if (!qrEventId || !userId) {
           setCheckInResult({
             success: false,
-            message: "Invalid QR code",
-            error: "Missing event ID or user ID",
+            message: "無効なQRコード",
+            error: "イベントIDまたはユーザーIDが不足しています",
           });
           return;
         }
@@ -98,8 +98,8 @@ export default function QRScanner({ eventId, isOpen, onClose }) {
         if (qrEventId !== eventId) {
           setCheckInResult({
             success: false,
-            message: "Invalid QR code",
-            error: "This QR code is not for the current event",
+            message: "無効なQRコード",
+            error: "このQRコードは現在のイベント用ではありません",
           });
           return;
         }
@@ -117,8 +117,8 @@ export default function QRScanner({ eventId, isOpen, onClose }) {
           console.log("❌ Registration lookup failed:", fetchError?.message || "No registration found");
           setCheckInResult({
             success: false,
-            message: "Participant not found",
-            error: "No approved registration found for this participant",
+            message: "参加者が見つかりません",
+            error: "この参加者の承認済み登録が見つかりません",
           });
           return;
         }
@@ -163,7 +163,7 @@ export default function QRScanner({ eventId, isOpen, onClose }) {
 
           setCheckInResult({
             success: false,
-            message: "Already checked in",
+            message: "すでにチェックイン済み",
             participant: registration.users,
             familyMembers: familyMembers || [],
             registrationDate: new Date(
@@ -185,7 +185,7 @@ export default function QRScanner({ eventId, isOpen, onClose }) {
         // Show participant details for admin approval (don't auto check-in)
         setCheckInResult({
           success: null, // null means pending approval
-          message: "Participant verification",
+          message: "参加者確認",
           participant: registration.users,
           familyMembers: familyMembers || [],
           registrationDate: new Date(

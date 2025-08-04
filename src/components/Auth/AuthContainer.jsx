@@ -91,7 +91,7 @@ function SuperuserLogin({ onBack }) {
           textAlign: "center",
         }}
       >
-        Superuser Login
+        スーパーユーザーログイン
       </h2>
       <form
         onSubmit={handleSubmit}
@@ -282,7 +282,7 @@ export default function AuthContainer({ onAuthSuccess }) {
         className="test-card"
         style={{ maxWidth: "400px", margin: "0 auto", textAlign: "center" }}
       >
-        <div style={{ fontSize: "1rem", color: "#6b7280" }}>Loading...</div>
+        <div style={{ fontSize: "1rem", color: "#6b7280" }}>読み込み中...</div>
       </div>
     );
   }
@@ -302,7 +302,7 @@ export default function AuthContainer({ onAuthSuccess }) {
             textAlign: "center",
           }}
         >
-          Welcome, {user.user_metadata?.full_name || user.email}!
+          {user.user_metadata?.full_name || user.email}さん、ようこそ！
         </h2>
 
         <div
@@ -315,8 +315,8 @@ export default function AuthContainer({ onAuthSuccess }) {
             color: "#166534",
           }}
         >
-          <p>You are successfully logged in.</p>
-          <p>Email: {user.email}</p>
+          <p>ログインに成功しました。</p>
+          <p>メールアドレス: {user.email}</p>
         </div>
 
         <button
@@ -334,7 +334,7 @@ export default function AuthContainer({ onAuthSuccess }) {
             transition: "background-color 0.2s",
           }}
         >
-          Sign Out
+          ログアウト
         </button>
       </div>
     );

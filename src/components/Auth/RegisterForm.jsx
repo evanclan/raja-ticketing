@@ -98,7 +98,7 @@ export default function RegisterForm({ onSuccess, onSwitchToLogin }) {
           textAlign: "center",
         }}
       >
-        Create Account
+        アカウント作成
       </h2>
 
       <form
@@ -117,7 +117,7 @@ export default function RegisterForm({ onSuccess, onSwitchToLogin }) {
               marginBottom: "0.5rem",
             }}
           >
-            Full Name
+            氏名
           </label>
           <input
             id="fullName"
@@ -135,7 +135,7 @@ export default function RegisterForm({ onSuccess, onSwitchToLogin }) {
               outline: "none",
               transition: "border-color 0.2s",
             }}
-            placeholder="Enter your full name"
+            placeholder="氏名を入力してください"
           />
         </div>
 
@@ -151,7 +151,7 @@ export default function RegisterForm({ onSuccess, onSwitchToLogin }) {
               marginBottom: "0.5rem",
             }}
           >
-            Email Address
+            メールアドレス
           </label>
           <input
             id="email"
@@ -170,7 +170,7 @@ export default function RegisterForm({ onSuccess, onSwitchToLogin }) {
               outline: "none",
               transition: "border-color 0.2s",
             }}
-            placeholder="Enter your email"
+            placeholder="メールアドレスを入力してください"
           />
         </div>
 
@@ -186,7 +186,7 @@ export default function RegisterForm({ onSuccess, onSwitchToLogin }) {
               marginBottom: "0.5rem",
             }}
           >
-            Password
+            パスワード
           </label>
           <input
             id="password"
@@ -205,7 +205,7 @@ export default function RegisterForm({ onSuccess, onSwitchToLogin }) {
               outline: "none",
               transition: "border-color 0.2s",
             }}
-            placeholder="Enter your password"
+            placeholder="パスワードを入力してください"
           />
         </div>
 
@@ -221,7 +221,7 @@ export default function RegisterForm({ onSuccess, onSwitchToLogin }) {
               marginBottom: "0.5rem",
             }}
           >
-            Confirm Password
+            パスワード確認
           </label>
           <input
             id="confirmPassword"
@@ -240,7 +240,7 @@ export default function RegisterForm({ onSuccess, onSwitchToLogin }) {
               outline: "none",
               transition: "border-color 0.2s",
             }}
-            placeholder="Confirm your password"
+            placeholder="パスワードを再入力してください"
           />
         </div>
 
@@ -293,7 +293,7 @@ export default function RegisterForm({ onSuccess, onSwitchToLogin }) {
             transition: "background-color 0.2s",
           }}
         >
-          {loading ? "Creating account..." : "Create Account"}
+          {loading ? "アカウント作成中..." : "アカウント作成"}
         </button>
       </form>
 
@@ -307,7 +307,7 @@ export default function RegisterForm({ onSuccess, onSwitchToLogin }) {
         }}
       >
         <p>
-          Already have an account?{" "}
+          すでにアカウントをお持ちの方は{" "}
           <button
             onClick={onSwitchToLogin}
             style={{
@@ -318,7 +318,7 @@ export default function RegisterForm({ onSuccess, onSwitchToLogin }) {
               textDecoration: "underline",
             }}
           >
-            Sign in here
+            ここでログイン
           </button>
         </p>
       </div>

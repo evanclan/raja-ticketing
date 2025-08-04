@@ -143,12 +143,12 @@ export default function ParticipantsModal({ event, isOpen, onClose }) {
             marginBottom: "1rem",
           }}
         >
-          🎉 Participants for: {event?.title}
+          🎉 参加者: {event?.title}
         </h3>
 
         {loading && (
           <div style={{ padding: "2rem", textAlign: "center" }}>
-            Loading participants...
+            参加者を読み込み中...
           </div>
         )}
 
@@ -163,7 +163,7 @@ export default function ParticipantsModal({ event, isOpen, onClose }) {
               border: "1px solid #fecaca",
             }}
           >
-            Error: {error}
+            エラー: {error}
           </div>
         )}
 
@@ -171,14 +171,14 @@ export default function ParticipantsModal({ event, isOpen, onClose }) {
           <div
             style={{ padding: "2rem", textAlign: "center", color: "#6b7280" }}
           >
-            No approved participants yet.
+            まだ承認済みの参加者はいません。
           </div>
         )}
 
         {!loading && !error && participants.length > 0 && (
           <div>
             <p style={{ marginBottom: "1rem", color: "#6b7280" }}>
-              Found {participants.length} approved participant(s)
+              {participants.length}人の承認済み参加者が見つかりました
               {participants.some((p) => p.familyMemberCount > 0) && (
                 <span style={{ color: "#3b82f6", fontWeight: "500" }}>
                   {" "}
@@ -187,7 +187,7 @@ export default function ParticipantsModal({ event, isOpen, onClose }) {
                     (sum, p) => sum + p.familyMemberCount,
                     0
                   )}{" "}
-                  family members
+                  人の家族メンバー
                 </span>
               )}
             </p>
@@ -201,7 +201,7 @@ export default function ParticipantsModal({ event, isOpen, onClose }) {
                       borderBottom: "1px solid #e5e7eb",
                     }}
                   >
-                    Email
+                    メールアドレス
                   </th>
                   <th
                     style={{
@@ -210,7 +210,7 @@ export default function ParticipantsModal({ event, isOpen, onClose }) {
                       borderBottom: "1px solid #e5e7eb",
                     }}
                   >
-                    Name
+                    氏名
                   </th>
                   <th
                     style={{
@@ -219,7 +219,7 @@ export default function ParticipantsModal({ event, isOpen, onClose }) {
                       borderBottom: "1px solid #e5e7eb",
                     }}
                   >
-                    Family
+                    家族
                   </th>
                   <th
                     style={{
@@ -228,7 +228,7 @@ export default function ParticipantsModal({ event, isOpen, onClose }) {
                       borderBottom: "1px solid #e5e7eb",
                     }}
                   >
-                    Registered
+                    登録日
                   </th>
                 </tr>
               </thead>
@@ -260,7 +260,7 @@ export default function ParticipantsModal({ event, isOpen, onClose }) {
                         </span>
                       ) : (
                         <span style={{ color: "#6b7280", fontSize: "0.75rem" }}>
-                          None
+                          なし
                         </span>
                       )}
                     </td>
@@ -296,7 +296,7 @@ export default function ParticipantsModal({ event, isOpen, onClose }) {
               cursor: loading ? "not-allowed" : "pointer",
             }}
           >
-            🔄 Refresh
+            🔄 更新
           </button>
 
           <button
@@ -312,7 +312,7 @@ export default function ParticipantsModal({ event, isOpen, onClose }) {
               cursor: "pointer",
             }}
           >
-            Close
+            閉じる
           </button>
         </div>
       </div>

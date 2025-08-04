@@ -20,7 +20,7 @@ export default function EventList({ events, onEventDeleted, onEventUpdated, onNa
 
 
   const handleDelete = async (eventId) => {
-    if (!confirm("Are you sure you want to delete this event?")) {
+    if (!confirm("このイベントを削除してもよろしいですか？")) {
       return;
     }
 
@@ -190,7 +190,7 @@ export default function EventList({ events, onEventDeleted, onEventUpdated, onNa
                   color: event.status === "active" ? "#166534" : "#6b7280",
                 }}
               >
-                {event.status === "active" ? "Active" : "Inactive"}
+                {event.status === "active" ? "アクティブ" : "非アクティブ"}
               </span>
             </div>
 
@@ -233,7 +233,7 @@ export default function EventList({ events, onEventDeleted, onEventUpdated, onNa
                   marginBottom: "0.5rem",
                 }}
               >
-                💰 {formatPrice(event.price)} per ticket
+                💰 チケット1枚 {formatPrice(event.price)}
               </p>
               <p
                 style={{
@@ -242,7 +242,7 @@ export default function EventList({ events, onEventDeleted, onEventUpdated, onNa
                   marginBottom: "0.5rem",
                 }}
               >
-                🎫 Capacity: {event.capacity} tickets
+                🎫 定員: {event.capacity}枚
               </p>
             </div>
 
@@ -276,7 +276,7 @@ export default function EventList({ events, onEventDeleted, onEventUpdated, onNa
                   transition: "background-color 0.2s",
                 }}
               >
-                {event.status === "active" ? "Deactivate" : "Activate"}
+                {event.status === "active" ? "非アクティブ化" : "アクティブ化"}
               </button>
 
               <button
@@ -293,7 +293,7 @@ export default function EventList({ events, onEventDeleted, onEventUpdated, onNa
                   transition: "background-color 0.2s",
                 }}
               >
-                Edit
+                編集
               </button>
 
               <button
@@ -310,7 +310,7 @@ export default function EventList({ events, onEventDeleted, onEventUpdated, onNa
                   transition: "background-color 0.2s",
                 }}
               >
-                👥 Participants
+                👥 参加者
               </button>
 
               <button
@@ -330,7 +330,7 @@ export default function EventList({ events, onEventDeleted, onEventUpdated, onNa
                   gap: "0.25rem",
                 }}
               >
-                🎉 Start Event
+                🎉 イベント開始
               </button>
 
               <button
@@ -348,7 +348,7 @@ export default function EventList({ events, onEventDeleted, onEventUpdated, onNa
                   transition: "background-color 0.2s",
                 }}
               >
-                Delete
+                削除
               </button>
             </div>
           </div>
@@ -390,11 +390,11 @@ export default function EventList({ events, onEventDeleted, onEventUpdated, onNa
                 marginBottom: "1rem",
               }}
             >
-              Edit Event: {editingEvent.title}
+              イベント編集: {editingEvent.title}
             </h3>
 
             <p style={{ color: "#6b7280", marginBottom: "1rem" }}>
-              Edit functionality will be implemented in the next step.
+              編集機能は次のステップで実装されます。
             </p>
 
             <div
@@ -417,7 +417,7 @@ export default function EventList({ events, onEventDeleted, onEventUpdated, onNa
                   cursor: "pointer",
                 }}
               >
-                Close
+                閉じる
               </button>
             </div>
           </div>

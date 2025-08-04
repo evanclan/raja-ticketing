@@ -74,7 +74,7 @@ export default function FamilyRegistration({ user }) {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm("Are you sure you want to remove this family member?")) {
+    if (!confirm("この家族メンバーを削除してもよろしいですか？")) {
       return;
     }
 
@@ -103,7 +103,7 @@ export default function FamilyRegistration({ user }) {
   if (loading) {
     return (
       <div style={{ textAlign: "center", padding: "1rem" }}>
-        Loading family members...
+        家族メンバーを読み込み中...
       </div>
     );
   }
@@ -126,7 +126,7 @@ export default function FamilyRegistration({ user }) {
             margin: 0,
           }}
         >
-          👨‍👩‍👧‍👦 My Family Members
+          👨‍👩‍👧‍👦 家族メンバー
         </h3>
         <button
           onClick={() => setShowAddForm(!showAddForm)}
@@ -141,7 +141,7 @@ export default function FamilyRegistration({ user }) {
             fontWeight: "500",
           }}
         >
-          {showAddForm ? "Cancel" : "Add Family Member"}
+          {showAddForm ? "キャンセル" : "家族メンバー追加"}
         </button>
       </div>
 
@@ -194,7 +194,7 @@ export default function FamilyRegistration({ user }) {
               color: "#374151",
             }}
           >
-            Add New Family Member
+            新しい家族メンバーを追加
           </h4>
           <form onSubmit={handleSubmit}>
             <div
@@ -215,7 +215,7 @@ export default function FamilyRegistration({ user }) {
                     marginBottom: "0.25rem",
                   }}
                 >
-                  Full Name *
+                  氏名 *
                 </label>
                 <input
                   type="text"
@@ -231,7 +231,7 @@ export default function FamilyRegistration({ user }) {
                     borderRadius: "4px",
                     fontSize: "0.875rem",
                   }}
-                  placeholder="Enter full name"
+                  placeholder="氏名を入力してください"
                 />
               </div>
               <div>
@@ -244,7 +244,7 @@ export default function FamilyRegistration({ user }) {
                     marginBottom: "0.25rem",
                   }}
                 >
-                  Age
+                  年齢
                 </label>
                 <input
                   type="number"
@@ -261,7 +261,7 @@ export default function FamilyRegistration({ user }) {
                     borderRadius: "4px",
                     fontSize: "0.875rem",
                   }}
-                  placeholder="Enter age"
+                  placeholder="年齢を入力してください"
                 />
               </div>
             </div>
@@ -275,7 +275,7 @@ export default function FamilyRegistration({ user }) {
                   marginBottom: "0.25rem",
                 }}
               >
-                Relationship
+                続柄
               </label>
               <select
                 value={formData.relationship}
@@ -290,14 +290,14 @@ export default function FamilyRegistration({ user }) {
                   fontSize: "0.875rem",
                 }}
               >
-                <option value="">Select relationship</option>
-                <option value="spouse">Spouse</option>
-                <option value="child">Child</option>
-                <option value="parent">Parent</option>
-                <option value="sibling">Sibling</option>
-                <option value="grandparent">Grandparent</option>
-                <option value="grandchild">Grandchild</option>
-                <option value="other">Other</option>
+                <option value="">続柄を選択してください</option>
+                <option value="spouse">配偶者</option>
+                <option value="child">子供</option>
+                <option value="parent">親</option>
+                <option value="sibling">兄弟姉妹</option>
+                <option value="grandparent">祖父母</option>
+                <option value="grandchild">孫</option>
+                <option value="other">その他</option>
               </select>
             </div>
             <div style={{ marginBottom: "1.5rem" }}>
@@ -310,7 +310,7 @@ export default function FamilyRegistration({ user }) {
                   marginBottom: "0.25rem",
                 }}
               >
-                Notes (Optional)
+                備考（任意）
               </label>
               <textarea
                 value={formData.notes}
@@ -326,7 +326,7 @@ export default function FamilyRegistration({ user }) {
                   fontSize: "0.875rem",
                   resize: "vertical",
                 }}
-                placeholder="Any special notes or dietary requirements..."
+                placeholder="特別な備考や食事制限など..."
               />
             </div>
             <div style={{ display: "flex", gap: "0.75rem" }}>
@@ -344,7 +344,7 @@ export default function FamilyRegistration({ user }) {
                   fontWeight: "500",
                 }}
               >
-                {submitting ? "Adding..." : "Add Family Member"}
+                {submitting ? "追加中..." : "家族メンバー追加"}
               </button>
               <button
                 type="button"
@@ -360,7 +360,7 @@ export default function FamilyRegistration({ user }) {
                   fontWeight: "500",
                 }}
               >
-                Cancel
+                キャンセル
               </button>
             </div>
           </form>
@@ -380,8 +380,7 @@ export default function FamilyRegistration({ user }) {
           }}
         >
           <p style={{ margin: 0, fontSize: "0.875rem" }}>
-            No family members registered yet. Add your family members so they
-            can be included when you attend events!
+            まだ家族メンバーが登録されていません。イベント参加時に家族メンバーを含めるために、家族メンバーを追加してください！
           </p>
         </div>
       ) : (
@@ -417,7 +416,7 @@ export default function FamilyRegistration({ user }) {
                       }}
                     >
                       {" "}
-                      ({member.age} years old)
+                      ({member.age}歳)
                     </span>
                   )}
                 </div>
@@ -457,7 +456,7 @@ export default function FamilyRegistration({ user }) {
                   fontWeight: "500",
                 }}
               >
-                Remove
+                削除
               </button>
             </div>
           ))}
@@ -475,10 +474,7 @@ export default function FamilyRegistration({ user }) {
             color: "#1e40af",
           }}
         >
-          <strong>Note:</strong> When you attend events, show your QR code to
-          the admin. Your {familyMembers.length} family member
-          {familyMembers.length !== 1 ? "s" : ""} will be automatically included
-          in your check-in.
+          <strong>注意:</strong> イベント参加時は、QRコードを管理者に見せてください。{familyMembers.length}人の家族メンバーが自動的にチェックインに含まれます。
         </div>
       )}
     </div>

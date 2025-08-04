@@ -141,7 +141,7 @@ export default function AdminDashboard({ user, onNavigateToEventManagement }) {
         style={{ maxWidth: "800px", margin: "0 auto", textAlign: "center" }}
       >
         <div style={{ fontSize: "1rem", color: "#6b7280" }}>
-          Loading admin dashboard...
+          管理者ダッシュボードを読み込み中...
         </div>
       </div>
     );
@@ -164,7 +164,7 @@ export default function AdminDashboard({ user, onNavigateToEventManagement }) {
             marginBottom: 16,
           }}
         >
-          + Create Event
+          + イベント作成
         </button>
       </div>
       {showCreateForm && (
@@ -185,23 +185,23 @@ export default function AdminDashboard({ user, onNavigateToEventManagement }) {
         <h3
           style={{ fontSize: "1.25rem", fontWeight: "bold", marginBottom: 12 }}
         >
-          Pending Participation Approvals
+          参加承認待ち
         </h3>
         {pendingLoading ? (
-          <div>Loading pending approvals...</div>
+          <div>承認待ちを読み込み中...</div>
         ) : pendingError ? (
           <div style={{ color: "#991b1b" }}>{pendingError}</div>
         ) : pendingRegs.length === 0 ? (
-          <div style={{ color: "#6b7280" }}>No pending approvals.</div>
+          <div style={{ color: "#6b7280" }}>承認待ちはありません。</div>
         ) : (
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ background: "#f3f4f6" }}>
                 <th style={{ padding: "0.5rem", textAlign: "left" }}>
-                  User Email
+                  ユーザーメールアドレス
                 </th>
-                <th style={{ padding: "0.5rem", textAlign: "left" }}>Event</th>
-                <th style={{ padding: "0.5rem" }}>Action</th>
+                                  <th style={{ padding: "0.5rem", textAlign: "left" }}>イベント</th>
+                  <th style={{ padding: "0.5rem" }}>操作</th>
               </tr>
             </thead>
             <tbody>
@@ -228,7 +228,7 @@ export default function AdminDashboard({ user, onNavigateToEventManagement }) {
                         marginRight: 8,
                       }}
                     >
-                      Approve
+                      承認
                     </button>
                     <button
                       onClick={() => handleReject(reg.id)}
@@ -243,7 +243,7 @@ export default function AdminDashboard({ user, onNavigateToEventManagement }) {
                         cursor: "pointer",
                       }}
                     >
-                      Reject
+                      拒否
                     </button>
                   </td>
                 </tr>

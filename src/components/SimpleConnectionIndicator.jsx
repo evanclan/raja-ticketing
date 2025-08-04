@@ -41,7 +41,7 @@ export default function SimpleConnectionIndicator() {
             animation: "pulse 2s infinite",
           }}
         />
-        Testing...
+        テスト中...
       </div>
     );
   }
@@ -68,7 +68,7 @@ export default function SimpleConnectionIndicator() {
           backgroundColor: connected ? "#10b981" : "#ef4444",
         }}
       />
-      {connected ? "DB Connected" : "DB Error"}
+      {connected ? "DB接続済み" : "DBエラー"}
     </div>
   );
 }

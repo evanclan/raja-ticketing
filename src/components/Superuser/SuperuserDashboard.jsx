@@ -32,14 +32,14 @@ export default function SuperuserDashboard({ onSignOut }) {
         .order("created_at", { ascending: false });
 
       if (error) {
-        setAddError("Error fetching admins: " + error.message);
+        setAddError("管理者の取得エラー: " + error.message);
       } else {
         console.log("Admins from users table:", data);
         setAdmins(data || []);
       }
     } catch (error) {
       console.error("Error in fetchAdmins:", error);
-      setAddError("Error fetching admins: " + error.message);
+      setAddError("管理者の取得エラー: " + error.message);
     } finally {
       setLoadingAdmins(false);
     }
@@ -60,7 +60,7 @@ export default function SuperuserDashboard({ onSignOut }) {
 
       if (error) {
         console.log("❌ Error fetching users:", error);
-        setAddError("Error fetching users: " + error.message);
+        setAddError("ユーザーの取得エラー: " + error.message);
       } else {
         console.log("✅ Users fetched successfully:", data?.length || 0, "users");
         setUsers(data || []);
@@ -68,7 +68,7 @@ export default function SuperuserDashboard({ onSignOut }) {
     } catch (error) {
       console.log("❌ Exception in fetchUsers:", error);
       console.error("Error in fetchUsers:", error);
-      setAddError("Error fetching users: " + error.message);
+      setAddError("ユーザーの取得エラー: " + error.message);
     } finally {
       setLoadingUsers(false);
     }
@@ -97,7 +97,7 @@ export default function SuperuserDashboard({ onSignOut }) {
         });
 
       if (createError) {
-        setAddError("Failed to create admin: " + createError.message);
+        setAddError("管理者の作成に失敗しました: " + createError.message);
       } else {
         // Insert into public.users table with admin role
         const { error: insertError } = await supabase.from("users").insert({
@@ -109,11 +109,11 @@ export default function SuperuserDashboard({ onSignOut }) {
 
         if (insertError) {
           setAddError(
-            "User created but role assignment failed: " + insertError.message
+            "ユーザーは作成されましたが、役割の割り当てに失敗しました: " + insertError.message
           );
         } else {
           setAddSuccess(
-            `✅ Admin created successfully: ${addName} (${addEmail})`
+            `✅ 管理者が正常に作成されました: ${addName} (${addEmail})`
           );
           setAddEmail("");
           setAddPassword("");
@@ -122,7 +122,7 @@ export default function SuperuserDashboard({ onSignOut }) {
         }
       }
     } catch (error) {
-      setAddError("Error creating admin: " + error.message);
+      setAddError("管理者作成エラー: " + error.message);
     } finally {
       setAddLoading(false);
     }
@@ -133,7 +133,7 @@ export default function SuperuserDashboard({ onSignOut }) {
     console.log("🔄 Starting delete admin process for email:", adminEmail);
     
     if (
-      !window.confirm(`Are you sure you want to delete admin: ${adminEmail}?`)
+      !window.confirm(`管理者 ${adminEmail} を削除してもよろしいですか？`)
     ) {
       console.log("❌ User cancelled admin deletion");
       return;
@@ -155,7 +155,7 @@ export default function SuperuserDashboard({ onSignOut }) {
 
       if (findError || !adminData) {
         console.log("❌ Admin not found:", findError);
-        setAddError("Admin not found in database");
+        setAddError("データベースで管理者が見つかりません");
         return;
       }
 

@@ -79,7 +79,7 @@ function App() {
                     fontSize: "0.875rem",
                   }}
                 >
-                  Logged in as: {currentUser.email}
+                  ログイン中: {currentUser.email}
                 </p>
               </div>
               <div style={{ display: "flex", gap: "1rem" }}>
@@ -98,7 +98,7 @@ function App() {
                     fontSize: "0.875rem",
                   }}
                 >
-                  Sign Out
+                  ログアウト
                 </button>
               </div>
             </div>

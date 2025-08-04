@@ -123,7 +123,7 @@ export default function UserDashboard({ user }) {
 
   if (loading) {
     return (
-      <div style={{ textAlign: "center", marginTop: "2rem" }}>Loading...</div>
+      <div style={{ textAlign: "center", marginTop: "2rem" }}>読み込み中...</div>
     );
   }
 
@@ -146,7 +146,7 @@ export default function UserDashboard({ user }) {
           color: "#1f2937",
         }}
       >
-        User Dashboard
+        ユーザーダッシュボード
       </h2>
 
       {/* Family Registration Section */}
@@ -180,7 +180,7 @@ export default function UserDashboard({ user }) {
             gap: "0.5rem",
           }}
         >
-          ✅ Your Approved Events
+          ✅ 承認済みイベント
         </h3>
         {(() => {
           const approvedEvents = uniqueById(upcomingEvents).filter((event) => {
@@ -199,7 +199,7 @@ export default function UserDashboard({ user }) {
                 textAlign: "center",
               }}
             >
-              No approved events yet. Register for events below!
+              承認済みイベントはまだありません。下記のイベントに登録してください！
             </div>
           ) : (
             <div
@@ -256,7 +256,7 @@ export default function UserDashboard({ user }) {
                       fontSize: "0.875rem",
                     }}
                   >
-                    ✅ Approved - You're In!
+                    ✅ 承認済み - 参加確定！
                   </div>
 
                   {/* Add Ticket Button */}
@@ -282,7 +282,7 @@ export default function UserDashboard({ user }) {
                       gap: "0.5rem",
                     }}
                   >
-                    🎫 Show My Ticket
+                    🎫 チケット表示
                   </button>
                 </div>
               ))}
@@ -301,7 +301,7 @@ export default function UserDashboard({ user }) {
             color: "#3b82f6",
           }}
         >
-          🎫 Available Events
+          🎫 参加可能なイベント
         </h3>
         {(() => {
           const availableEvents = uniqueById(upcomingEvents).filter((event) => {
@@ -311,7 +311,7 @@ export default function UserDashboard({ user }) {
 
           return availableEvents.length === 0 ? (
             <div style={{ color: "#6b7280" }}>
-              No available events to register for.
+              登録可能なイベントはありません。
             </div>
           ) : (
             <ul style={{ listStyle: "none", padding: 0 }}>
@@ -348,7 +348,7 @@ export default function UserDashboard({ user }) {
             color: "#f59e0b",
           }}
         >
-          ⏳ Pending Approval
+          ⏳ 承認待ち
         </h3>
         {(() => {
           const pendingEvents = uniqueById(upcomingEvents).filter((event) => {
@@ -357,7 +357,7 @@ export default function UserDashboard({ user }) {
           });
 
           return pendingEvents.length === 0 ? (
-            <div style={{ color: "#6b7280" }}>No events awaiting approval.</div>
+            <div style={{ color: "#6b7280" }}>承認待ちのイベントはありません。</div>
           ) : (
             <ul style={{ listStyle: "none", padding: 0 }}>
               {pendingEvents.map((event) => (
@@ -372,7 +372,7 @@ export default function UserDashboard({ user }) {
                       fontSize: "0.875rem",
                     }}
                   >
-                    ⏳ Awaiting admin approval
+                    ⏳ 管理者承認待ち
                   </span>
                 </li>
               ))}
@@ -397,12 +397,12 @@ export default function UserDashboard({ user }) {
             color: "#6b7280",
           }}
         >
-          📚 Past Participated Events
+          📚 過去の参加イベント
         </h3>
         {uniqueById(pastEvents).length === 0 ? (
-          <div style={{ color: "#9ca3af", fontSize: "0.9rem" }}>
-            No past events.
-          </div>
+                      <div style={{ color: "#9ca3af", fontSize: "0.9rem" }}>
+              過去のイベントはありません。
+            </div>
         ) : (
           <ul style={{ listStyle: "none", padding: 0 }}>
             {uniqueById(pastEvents).map((event) => (
@@ -500,7 +500,7 @@ export default function UserDashboard({ user }) {
                   cursor: "pointer",
                 }}
               >
-                Close
+                閉じる
               </button>
               {!participatedEventIds.includes(selectedEvent.id) && (
                 <button
@@ -516,7 +516,7 @@ export default function UserDashboard({ user }) {
                     cursor: participateLoading ? "not-allowed" : "pointer",
                   }}
                 >
-                  {participateLoading ? "Registering..." : "Participate"}
+                  {participateLoading ? "登録中..." : "参加"}
                 </button>
               )}
             </div>

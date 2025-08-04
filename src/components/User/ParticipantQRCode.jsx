@@ -83,10 +83,10 @@ export default function ParticipantQRCode({ event, user, isOpen, onClose }) {
               marginBottom: "0.5rem",
             }}
           >
-            🎫 Event Ticket
+            🎫 イベントチケット
           </h3>
           <p style={{ color: "#6b7280", fontSize: "0.9rem" }}>
-            Show this QR code at the event entrance
+            イベント会場の入口でこのQRコードを見せてください
           </p>
         </div>
 
@@ -170,7 +170,7 @@ export default function ParticipantQRCode({ event, user, isOpen, onClose }) {
                 fontSize: "0.875rem",
               }}
             >
-              ✅ Valid Entry Code
+              ✅ 有効な入場コード
             </p>
           </div>
         ) : null}
@@ -192,7 +192,7 @@ export default function ParticipantQRCode({ event, user, isOpen, onClose }) {
               marginBottom: "0.5rem",
             }}
           >
-            📱 Instructions:
+            📱 使用方法:
           </h5>
           <ul
             style={{
@@ -202,10 +202,10 @@ export default function ParticipantQRCode({ event, user, isOpen, onClose }) {
               margin: 0,
             }}
           >
-            <li>Save this QR code to your phone</li>
-            <li>Arrive 15 minutes before the event</li>
-            <li>Show the QR code at the entrance</li>
-            <li>Keep your phone charged!</li>
+            <li>このQRコードを携帯電話に保存してください</li>
+            <li>イベント開始15分前に到着してください</li>
+            <li>入口でQRコードを見せてください</li>
+            <li>携帯電話の充電を忘れずに！</li>
           </ul>
         </div>
 
@@ -239,7 +239,7 @@ export default function ParticipantQRCode({ event, user, isOpen, onClose }) {
             }}
             disabled={!qrCode}
           >
-            📥 Download
+            📥 ダウンロード
           </button>
           <button
             onClick={onClose}
@@ -254,7 +254,7 @@ export default function ParticipantQRCode({ event, user, isOpen, onClose }) {
               fontSize: "0.875rem",
             }}
           >
-            Close
+            閉じる
           </button>
         </div>
       </div>

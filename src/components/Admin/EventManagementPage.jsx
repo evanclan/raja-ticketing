@@ -314,7 +314,7 @@ export default function EventManagementPage({ eventId, onBack, currentUser }) {
     return (
       <div style={{ padding: "2rem", textAlign: "center" }}>
         <div style={{ fontSize: "1.125rem", color: "#6b7280" }}>
-          Loading event...
+          イベントを読み込み中...
         </div>
       </div>
     );
@@ -365,12 +365,12 @@ export default function EventManagementPage({ eventId, onBack, currentUser }) {
                 cursor: "pointer",
               }}
             >
-              ← Back to Events
+              ← イベント一覧に戻る
             </button>
 
             <div style={{ textAlign: "right" }}>
               <div style={{ fontSize: "0.875rem", color: "#6b7280" }}>
-                Event Manager: {currentUser?.email}
+                イベント管理者: {currentUser?.email}
               </div>
             </div>
           </div>
