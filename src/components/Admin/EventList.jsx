@@ -82,11 +82,6 @@ export default function EventList({ events, onEventDeleted, onEventUpdated, onNa
     setSelectedEventForParticipants(null);
   };
 
-  const handleOpenScanner = (event) => {
-    setSelectedEventForScanner(event);
-    setScannerOpen(true);
-  };
-
   const handleCloseScanner = () => {
     setScannerOpen(false);
     setSelectedEventForScanner(null);

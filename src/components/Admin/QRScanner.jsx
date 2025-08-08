@@ -146,6 +146,7 @@ export default function QRScanner({ eventId, isOpen, onClose }) {
             userInfo = userData;
           }
         } catch (err) {
+          console.error("Failed to fetch user info in QRScanner:", err);
           // Final fallback
           userInfo = { email: 'Unknown', full_name: 'Unknown' };
         }

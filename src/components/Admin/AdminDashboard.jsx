@@ -3,7 +3,7 @@ import { supabase } from "../../lib/supabase";
 import CreateEventForm from "./CreateEventForm";
 import EventList from "./EventList";
 
-export default function AdminDashboard({ user, onNavigateToEventManagement }) {
+export default function AdminDashboard({ onNavigateToEventManagement }) {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -58,6 +58,10 @@ export default function AdminDashboard({ user, onNavigateToEventManagement }) {
         supabase.from("users").select("id, email").in("id", userIds),
         supabase.from("events").select("id, title").in("id", eventIds)
       ]);
+
+      if (eventsError) {
+        console.warn("Failed to fetch events for pending registrations:", eventsError);
+      }
 
       // If users table doesn't exist or has issues, try auth.users
       let finalUsersData = usersData;
