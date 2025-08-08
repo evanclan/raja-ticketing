@@ -164,7 +164,7 @@ export default function CreateEventForm({ onEventCreated, onCancel }) {
         });
       }
     } catch (err) {
-      setError("予期しないエラーが発生しました。もう一度お試しください。");
+      setError("予期しないエラーが発生しました: " + (err?.message || String(err)));
     } finally {
       setLoading(false);
     }

@@ -10,6 +10,7 @@ export default function SimpleConnectionIndicator() {
         const result = await supabaseHelpers.checkConnection();
         setConnected(result.success);
       } catch (error) {
+        console.error("Connection test failed:", error);
         setConnected(false);
       }
     };
