@@ -54,193 +54,59 @@ export default function LoginForm({
   };
 
   return (
-    <div
-      className="test-card"
-      style={{ margin: "0 auto", position: "relative" }}
-    >
+    <div className="card relative">
       <SimpleConnectionIndicator />
-      <h2
-        style={{
-          fontSize: "1.5rem",
-          fontWeight: "bold",
-          color: "#1f2937",
-          marginBottom: "1.5rem",
-          textAlign: "center",
-        }}
-      >
-        おかえりなさい
+      <h2 className="text-xl font-semibold text-slate-900 text-center mb-4">
+        Welcome Back
       </h2>
 
-      <form
-        onSubmit={handleSubmit}
-        style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
-      >
+      <form onSubmit={handleSubmit} className="space-y-3">
         {/* Email Field */}
         <div>
-          <label
-            htmlFor="email"
-            style={{
-              display: "block",
-              fontSize: "0.875rem",
-              fontWeight: "500",
-              color: "#374151",
-              marginBottom: "0.5rem",
-            }}
-          >
-            メールアドレス
-          </label>
-          <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            autoComplete="username"
-            style={{
-              width: "100%",
-              padding: "0.75rem",
-              border: "1px solid #d1d5db",
-              borderRadius: "0.375rem",
-              fontSize: "1rem",
-              outline: "none",
-              transition: "border-color 0.2s",
-            }}
-            placeholder="メールアドレスを入力してください"
-          />
+          <label htmlFor="email" className="label">Email Address</label>
+          <input id="email" type="email" value={email}
+                 onChange={(e) => setEmail(e.target.value)} required
+                 autoComplete="username" className="input" placeholder="name@example.com" />
         </div>
 
         {/* Password Field */}
         <div>
-          <label
-            htmlFor="password"
-            style={{
-              display: "block",
-              fontSize: "0.875rem",
-              fontWeight: "500",
-              color: "#374151",
-              marginBottom: "0.5rem",
-            }}
-          >
-            パスワード
-          </label>
-          <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            autoComplete="current-password"
-            style={{
-              width: "100%",
-              padding: "0.75rem",
-              border: "1px solid #d1d5db",
-              borderRadius: "0.375rem",
-              fontSize: "1rem",
-              outline: "none",
-              transition: "border-color 0.2s",
-            }}
-            placeholder="パスワードを入力してください"
-          />
+          <label htmlFor="password" className="label">Password</label>
+          <input id="password" type="password" value={password}
+                 onChange={(e) => setPassword(e.target.value)} required
+                 autoComplete="current-password" className="input" placeholder="••••••••" />
         </div>
 
         {/* Error Message */}
         {error && (
-          <div
-            style={{
-              padding: "0.75rem",
-              backgroundColor: "#fef2f2",
-              color: "#991b1b",
-              borderRadius: "0.375rem",
-              fontSize: "0.875rem",
-              border: "1px solid #fecaca",
-            }}
-          >
-            {error}
-          </div>
+          <div className="text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-sm">{error}</div>
         )}
 
         {/* Success Message */}
         {message && (
-          <div
-            style={{
-              padding: "0.75rem",
-              backgroundColor: "#f0fdf4",
-              color: "#166534",
-              borderRadius: "0.375rem",
-              fontSize: "0.875rem",
-              border: "1px solid #bbf7d0",
-            }}
-          >
-            {message}
-          </div>
+          <div className="text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2 text-sm">{message}</div>
         )}
 
         {/* Submit Button */}
-        <button
-          type="submit"
-          disabled={loading}
-          style={{
-            width: "100%",
-            padding: "0.75rem",
-            backgroundColor: loading ? "#9ca3af" : "#3b82f6",
-            color: "white",
-            border: "none",
-            borderRadius: "0.375rem",
-            fontSize: "1rem",
-            fontWeight: "500",
-            cursor: loading ? "not-allowed" : "pointer",
-            transition: "background-color 0.2s",
-          }}
-        >
-          {loading ? "ログイン中..." : "ログイン"}
+        <button type="submit" disabled={loading} className="btn btn-primary w-full">
+          {loading ? "Signing in..." : "Sign In"}
         </button>
 
         {/* Guest Mode Button */}
         {!hideGuest && (
-          <button
-            type="button"
-            onClick={handleGuestMode}
-            style={{
-              width: "100%",
-              padding: "0.75rem",
-              backgroundColor: "transparent",
-              color: "#6b7280",
-              border: "1px solid #d1d5db",
-              borderRadius: "0.375rem",
-              fontSize: "1rem",
-              fontWeight: "500",
-              cursor: "pointer",
-              transition: "all 0.2s",
-            }}
-          >
-            ゲストとして続行
+          <button type="button" onClick={handleGuestMode} className="btn btn-outline w-full">
+            Continue as Guest
           </button>
         )}
       </form>
 
       {/* Additional Links */}
       {!hideRegister && (
-        <div
-          style={{
-            marginTop: "1.5rem",
-            textAlign: "center",
-            fontSize: "0.875rem",
-            color: "#6b7280",
-          }}
-        >
+        <div className="text-center text-sm muted mt-4">
           <p>
-            アカウントをお持ちでない方は{" "}
-            <button
-              onClick={handleGuestMode}
-              style={{
-                background: "none",
-                border: "none",
-                color: "#3b82f6",
-                cursor: "pointer",
-                textDecoration: "underline",
-              }}
-            >
-              ここで登録
+            Don’t have an account?{" "}
+            <button onClick={handleGuestMode} className="text-brand-600 hover:underline">
+              Register here
             </button>
           </p>
         </div>
